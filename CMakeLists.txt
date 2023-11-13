@@ -1,0 +1,46 @@
+# CMakeLists.txt
+
+# Minimum version of CMake required
+cmake_minimum_required(VERSION 3.10)
+
+# Project name
+project(magrathean-universe)
+
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 17)
+
+# Source files
+set(SOURCES
+	    src/main.cpp
+    )
+
+if (WIN32)
+	# External libraries
+	set(LIBS
+		opengl32
+		freeglut
+	)
+
+	# Additional library directory
+	link_directories(${CMAKE_SOURCE_DIR}/lib/x64)
+	include_directories(${CMAKE_SOURCE_DIR}/include)
+
+	# Add the executable
+	add_executable(${PROJECT_NAME} ${SOURCES})
+
+	# Specify include directories for the target
+	target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+elseif (UNIX)
+	# External libraries
+	set(LIBS
+		GL
+		glut
+	)
+
+	# Add the executable
+	add_executable(${PROJECT_NAME} ${SOURCES})
+endif()
+
+# Link external libraries
+target_link_libraries(${PROJECT_NAME} ${LIBS})
