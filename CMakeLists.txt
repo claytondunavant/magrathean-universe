@@ -14,14 +14,33 @@ set(SOURCES
 	    src/main.cpp
     )
 
-# External libraries
-set(LIBS
-	GL
-	glut
-)
+if (WIN32)
+	# External libraries
+	set(LIBS
+		opengl32
+		freeglut
+	)
 
-# Add the executable
-add_executable(${PROJECT_NAME} ${SOURCES})
+	# Additional library directory
+	link_directories(${CMAKE_SOURCE_DIR}/lib/x64)
+	include_directories(${CMAKE_SOURCE_DIR}/include)
+
+	# Add the executable
+	add_executable(${PROJECT_NAME} ${SOURCES})
+
+	# Specify include directories for the target
+	target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+elseif (UNIX)
+	# External libraries
+	set(LIBS
+		GL
+		glut
+	)
+
+	# Add the executable
+	add_executable(${PROJECT_NAME} ${SOURCES})
+endif()
 
 # Link external libraries
 target_link_libraries(${PROJECT_NAME} ${LIBS})
