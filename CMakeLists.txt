@@ -10,9 +10,10 @@ project(magrathean-universe)
 set(CMAKE_CXX_STANDARD 17)
 
 # Source files
-set(SOURCES
-	    src/main.cpp
-    )
+file(GLOB SOURCES "src/*.cpp")
+
+# include directories
+include_directories("include")
 
 if (WIN32)
 	# External libraries
@@ -34,9 +35,9 @@ if (WIN32)
 elseif (UNIX)
 	# External libraries
 	set(LIBS
-		GLEW
 		GL
 		glut
+		GLEW
 	)
 
 	# Add the executable
