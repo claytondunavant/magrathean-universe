@@ -34,6 +34,7 @@ if (WIN32)
 elseif (UNIX)
 	# External libraries
 	set(LIBS
+		GLEW
 		GL
 		glut
 	)
