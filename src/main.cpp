@@ -1,12 +1,20 @@
-#include "Shader.h"
-#include <GL/gl.h>
-#include <cstddef>
-#include <iostream>
 #include <GL/glew.h>
+#include <GL/gl.h>
 #include <GL/freeglut_std.h>
 
-unsigned int VAO, VBO, shader_program;
+#include <cstddef>
+#include <iostream>
+#include <vector>
+
+#include "Shader.h"
+#include "Sphere.h"
+
+unsigned int VAO, VBO, EBO, shader_program;
 Shader s;
+
+Sphere sphere = Sphere(0.5f, 36, 18);
+std::vector<float> vertices;
+std::vector<unsigned int> indices;
 
 void display() {
     
@@ -16,6 +24,13 @@ void display() {
     s.use();
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
+    //glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0 );
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0 );
+    
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        std::cerr << "OpenGL error: " << error << std::endl;
+    }
 
     glutSwapBuffers();
 }
@@ -43,20 +58,24 @@ int main(int argc, char** argv) {
     s = Shader("../shaders/v.glsl", "../shaders/f.glsl");
 
     // set up vertex data and buffers
-
-    float vertices[] = {
-    -0.5f, -0.5f, 0.0f,
-    0.5f, -0.5f, 0.0f,
-    0.0f,  0.5f, 0.0f
-    };
+    sphere.build_vertices();
+    vertices = sphere.get_vertices();
+    indices = sphere.get_indices();
     
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+    
+    // bind Vertex Array Object
+    glBindVertexArray(VAO); 
 
-    glBindVertexArray(VAO); // bind Vertex Array Object
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO); // bind buffer to type GL_ARRAY_BUFFER
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // copy data into buffer
+    glBindBuffer(GL_ARRAY_BUFFER, VBO); 
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vertices[0]), vertices.data(), GL_STATIC_DRAW); // copy data into buffer
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // copy data into buffer
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
     
     // tell opengl how to interpret vertex data for a given attribute (in this case aPos)
     // argv[0]: attribute at location 0
@@ -67,6 +86,8 @@ int main(int argc, char** argv) {
     // argv[5]: offset where the poistion data begins in buffer
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0); // enable the vertex attrib at location 0
+                                
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     
     glutMainLoop();
 }
