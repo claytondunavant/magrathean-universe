@@ -61,7 +61,6 @@ public:
         position -= right * speed;
     }
     
-    // TODO: dont like this becaues there is a huge jump if you release the mouse
     void process_mouse_motion(int x, int y) {
         
         float x_off = x - last_x;

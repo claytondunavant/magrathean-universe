@@ -18,6 +18,7 @@
 #include <memory>
 #include <vector>
 #include <chrono>
+#include <cstdlib>
 
 #include "Shader.h"
 #include "Sphere.h"
@@ -95,15 +96,14 @@ void timer( int value ) {
     glutTimerFunc(16, timer, 0);
 }
 
-int main(int argc, char** argv) {
+void init(int argc, char** argv) {
     
-    // initGLUT
     glutInit(&argc, argv);
-    glutInitWindowSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-    
-    glutCreateWindow("FreeGLUT Window");
     glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE );
-    // GLUT callbacks
+    glutInitWindowSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+    glutCreateWindow("Magrathean Universe");
+    
+    // callbacks
     glutDisplayFunc(display);
     glutTimerFunc(0, timer, 0);
     glutKeyboardFunc(processKeyboardFunc);
@@ -114,9 +114,12 @@ int main(int argc, char** argv) {
     GLenum glew_status = glewInit();
     if ( glew_status != GLEW_OK ) {
         std::cout << "GLEW did not init correctly" << std::endl;
-        return 1;
+        exit(1);
     }
+}
 
+void prepare_render() {
+    
     // TODO: make not relative paths ??
     s = Shader("../shaders/v.glsl", "../shaders/f.glsl");
 
@@ -134,24 +137,25 @@ int main(int argc, char** argv) {
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO); 
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vertices[0]), vertices.data(), GL_STATIC_DRAW); // copy data into buffer
-    //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // copy data into buffer
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
     
-    // tell opengl how to interpret vertex data for a given attribute (in this case aPos)
-    // argv[0]: attribute at location 0
-    // argv[1]: size of vertex attribute (vec3 the attribute is made of 3 values)
-    // argv[2]: datatype
-    // argv[3]: want data to be normalized?
-    // argv[4]: stride: space between vertex elements
-    // argv[5]: offset where the poistion data begins in buffer
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0); // enable the vertex attrib at location 0
                                 
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+}
+
+int main(int argc, char** argv) {
     
+    // initialize all the things
+    init(argc, argv);
+    
+    // prepare to render everything
+    prepare_render();
+    
+    // call the main loop
     glutMainLoop();
 }
 
