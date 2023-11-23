@@ -2,12 +2,23 @@
 #include <GL/gl.h>
 #include <GL/freeglut_std.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include "glm/ext/matrix_clip_space.hpp"
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/trigonometric.hpp"
+
 #include <cstddef>
 #include <iostream>
+#include <memory>
 #include <vector>
+#include <chrono>
 
 #include "Shader.h"
 #include "Sphere.h"
+
+const unsigned int SCREEN_WIDTH = 800;
+const unsigned int SCREEN_HEIGHT = 800;
 
 unsigned int VAO, VBO, EBO, shader_program;
 Shader s;
@@ -16,12 +27,28 @@ Sphere sphere = Sphere(0.5f, 36, 18);
 std::vector<float> vertices;
 std::vector<unsigned int> indices;
 
+int start_time = 0;
+
 void display() {
     
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     s.use();
+    
+    float elapsed_time = (glutGet(GLUT_ELAPSED_TIME) - start_time) / 1000.0f;
+    
+    // tranformation
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 projection = glm::mat4(1.0f);
+    model = glm::rotate(model, elapsed_time * glm::radians(55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    projection = glm::perspective(glm::radians(45.0f), (float) SCREEN_WIDTH / (float) SCREEN_HEIGHT, 0.1f, 100.0f);
+    s.setMat4("model", model);
+    s.setMat4("view", view);
+    s.setMat4("projection", projection);
+    
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     //glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0 );
@@ -35,17 +62,22 @@ void display() {
     glutSwapBuffers();
 }
 
+void timer( int value ) {
+    glutPostRedisplay();
+    glutTimerFunc(16, timer, 0);
+}
+
 int main(int argc, char** argv) {
     
     // initGLUT
-    int width = 800; int height = 800;
     glutInit(&argc, argv);
-    glutInitWindowSize(width, height);
+    glutInitWindowSize(SCREEN_WIDTH, SCREEN_HEIGHT);
     
     glutCreateWindow("FreeGLUT Window");
     glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE );
     // GLUT callbacks
     glutDisplayFunc(display);
+    glutTimerFunc(0, timer, 0);
     
     // init glew
     GLenum glew_status = glewInit();
