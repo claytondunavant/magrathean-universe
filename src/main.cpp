@@ -1,3 +1,6 @@
+// https://learnopengl.com/Getting-started/Coordinate-Systems
+// https://learnopengl.com/Getting-started/Camera
+
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/freeglut_std.h>
@@ -6,6 +9,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
+#include "glm/fwd.hpp"
+#include "glm/geometric.hpp"
 #include "glm/trigonometric.hpp"
 
 #include <cstddef>
@@ -16,6 +21,7 @@
 
 #include "Shader.h"
 #include "Sphere.h"
+#include "Camera.h"
 
 const unsigned int SCREEN_WIDTH = 800;
 const unsigned int SCREEN_HEIGHT = 800;
@@ -27,7 +33,7 @@ Sphere sphere = Sphere(0.5f, 36, 18);
 std::vector<float> vertices;
 std::vector<unsigned int> indices;
 
-int start_time = 0;
+Camera camera = Camera();
 
 void display() {
     
@@ -36,14 +42,12 @@ void display() {
 
     s.use();
     
-    float elapsed_time = (glutGet(GLUT_ELAPSED_TIME) - start_time) / 1000.0f;
-    
     // tranformation
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 projection = glm::mat4(1.0f);
-    model = glm::rotate(model, elapsed_time * glm::radians(55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    view = camera.get_view_matrix();
     projection = glm::perspective(glm::radians(45.0f), (float) SCREEN_WIDTH / (float) SCREEN_HEIGHT, 0.1f, 100.0f);
     s.setMat4("model", model);
     s.setMat4("view", view);
@@ -51,7 +55,6 @@ void display() {
     
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
-    //glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0 );
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0 );
     
     GLenum error = glGetError();
@@ -60,6 +63,31 @@ void display() {
     }
 
     glutSwapBuffers();
+}
+
+void processKeyboardFunc(unsigned char key, int x, int y) {
+    switch (key) {
+        case 'w':
+            camera.move_forward();
+            break;
+        case 's':
+            camera.move_backward();
+            break;
+        case 'a':
+            camera.move_left();
+            break;
+        case 'd':
+            camera.move_right();
+            break;
+    }
+}
+
+void processMotionFunc(int x, int y) {
+    camera.process_mouse_motion(x,y);
+}
+
+void processMouseFunc(int button, int state, int x, int y) {
+    camera.process_mouse_button(button, state, x, y);
 }
 
 void timer( int value ) {
@@ -78,6 +106,9 @@ int main(int argc, char** argv) {
     // GLUT callbacks
     glutDisplayFunc(display);
     glutTimerFunc(0, timer, 0);
+    glutKeyboardFunc(processKeyboardFunc);
+    glutMotionFunc(processMotionFunc);
+    glutMouseFunc(processMouseFunc);
     
     // init glew
     GLenum glew_status = glewInit();
