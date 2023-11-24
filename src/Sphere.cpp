@@ -1,16 +1,65 @@
 //http://www.songho.ca/opengl/gl_sphere.html
 
-#include "Sphere.h"
+#include "glm/fwd.hpp"
+#include "glm/matrix.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+
 #include <math.h>
 
-Sphere::Sphere(float r, int sector_count, int stack_count) {
+#include "Sphere.h"
+
+Sphere::Sphere(float r, glm::vec3 position, int sector_count, int stack_count) {
     this->r = r;
+    this->position = position;
     this->sector_count = sector_count;
     this->stack_count = stack_count; 
+    
+    // build vertices and indices
+    build_vertices();
+    
+    // TODO: make not relative paths ??
+    // init shader
+    shader = Shader("../shaders/v.glsl", "../shaders/f.glsl");
+
+    // init rendering
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+    
+    // bind Vertex Array Object
+    glBindVertexArray(VAO); 
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO); 
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vertices[0]), vertices.data(), GL_STATIC_DRAW);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
+    
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0); // enable the vertex attrib at location 0
 }
 
 // TODO: be able to draw two spheres
-void Sphere::draw() {
+void Sphere::draw(glm::mat4 view, glm::mat4 projection) {
+
+    shader.use(); 
+
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    model *= glm::translate(glm::mat4(1.0f), position);
+
+    shader.setMat4("model", model);
+    shader.setMat4("view", view);
+    shader.setMat4("projection", projection);
+   
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0 );
+
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        std::cerr << "OpenGL error: " << error << std::endl;
+    }
+    
 }
 
 void Sphere::build_vertices()
@@ -70,11 +119,19 @@ void Sphere::build_vertices()
 }
 
 std::vector<float> Sphere::get_vertices() {
-   return this->vertices; 
+   return vertices; 
 }
 
 std::vector<unsigned int> Sphere::get_indices() {
-   return this->indices; 
+   return indices; 
+}
+
+glm::vec3 Sphere::get_position() {
+    return position;
+}
+
+void Sphere::set_position(glm::vec3 new_position) {
+    position = new_position;
 }
 
 void Sphere::add_vertex(float x, float y, float z) {

@@ -1,24 +1,7 @@
 // https://learnopengl.com/Getting-started/Coordinate-Systems
 // https://learnopengl.com/Getting-started/Camera
 
-#include <GL/glew.h>
-#include <GL/gl.h>
-#include <GL/freeglut_std.h>
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include "glm/ext/matrix_clip_space.hpp"
-#include "glm/ext/matrix_transform.hpp"
-#include "glm/fwd.hpp"
-#include "glm/geometric.hpp"
-#include "glm/trigonometric.hpp"
-
-#include <cstddef>
-#include <iostream>
-#include <memory>
-#include <vector>
-#include <chrono>
-#include <cstdlib>
+#include "util.h"
 
 #include "Shader.h"
 #include "Sphere.h"
@@ -27,13 +10,7 @@
 const unsigned int SCREEN_WIDTH = 800;
 const unsigned int SCREEN_HEIGHT = 800;
 
-unsigned int VAO, VBO, EBO, shader_program;
-Shader s;
-
-Sphere sphere = Sphere(0.5f, 36, 18);
-std::vector<float> vertices;
-std::vector<unsigned int> indices;
-
+std::vector<Sphere *> spheres;
 Camera camera = Camera();
 
 void display() {
@@ -41,26 +18,22 @@ void display() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-    s.use();
-    
     // tranformation
-    glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 projection = glm::mat4(1.0f);
-    model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     view = camera.get_view_matrix();
     projection = glm::perspective(glm::radians(45.0f), (float) SCREEN_WIDTH / (float) SCREEN_HEIGHT, 0.1f, 100.0f);
-    s.setMat4("model", model);
-    s.setMat4("view", view);
-    s.setMat4("projection", projection);
     
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0 );
+    // rotate the spheres
+    float time = time_since_epoch() * 0.000000000005f;
+    glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), time, glm::vec3(0.0f, 0.0f, 1.0f));
     
-    GLenum error = glGetError();
-    if (error != GL_NO_ERROR) {
-        std::cerr << "OpenGL error: " << error << std::endl;
+    for ( auto s : spheres ) {
+
+        glm::vec4 current_position = glm::vec4(s->get_position(), 1.0f);
+        s->set_position(rotationMatrix * current_position);
+        
+        s->draw(view, projection);
     }
 
     glutSwapBuffers();
@@ -96,6 +69,7 @@ void timer( int value ) {
     glutTimerFunc(16, timer, 0);
 }
 
+
 void init(int argc, char** argv) {
     
     glutInit(&argc, argv);
@@ -116,35 +90,11 @@ void init(int argc, char** argv) {
         std::cout << "GLEW did not init correctly" << std::endl;
         exit(1);
     }
-}
-
-void prepare_render() {
     
-    // TODO: make not relative paths ??
-    s = Shader("../shaders/v.glsl", "../shaders/f.glsl");
-
-    // set up vertex data and buffers
-    sphere.build_vertices();
-    vertices = sphere.get_vertices();
-    indices = sphere.get_indices();
-    
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-    
-    // bind Vertex Array Object
-    glBindVertexArray(VAO); 
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO); 
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vertices[0]), vertices.data(), GL_STATIC_DRAW); // copy data into buffer
-    
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
-    
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0); // enable the vertex attrib at location 0
-                                
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // debug
+    glEnable( GL_DEBUG_OUTPUT );
+    glEnable( GL_DEBUG_OUTPUT_SYNCHRONOUS );
+    glDebugMessageCallback(debug_message_callback, nullptr);
 }
 
 int main(int argc, char** argv) {
@@ -153,7 +103,13 @@ int main(int argc, char** argv) {
     init(argc, argv);
     
     // prepare to render everything
-    prepare_render();
+    Sphere * sphere = new Sphere(0.5f, glm::vec3(0.0f, 0.0f, 0.0f), 36, 18);
+    spheres.push_back(sphere);
+
+    Sphere * sphere2 = new Sphere(0.2f, glm::vec3(-1.0f, 0.0f, 0.0f), 36, 18);
+    spheres.push_back(sphere2);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     
     // call the main loop
     glutMainLoop();
