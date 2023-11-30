@@ -98,12 +98,15 @@ int main(int argc, char** argv) {
     init(argc, argv);
     
     // prepare to render everything
-    Sphere * sphere = new Sphere(0.5f, 0, glm::vec3(0.0f, 1.0f, 0.0f));
-    spheres.push_back(sphere);
-
-    Sphere * sphere2 = new Sphere(0.2f,  1.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-    spheres.push_back(sphere2);
-
+    float distance = 0;
+    float distance_inc = 0.5f;
+    glm::vec3 orbit_axis = glm::vec3(0.0f, 1.0f, 0.0f) ;
+    for (int i = 0; i < 5; i++) {
+        Sphere * sphere = new Sphere(0.1f, distance, orbit_axis);
+        spheres.push_back(sphere);
+        distance += distance_inc;
+    }
+    
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     
     // call the main loop

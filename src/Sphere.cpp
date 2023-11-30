@@ -1,18 +1,20 @@
 //http://www.songho.ca/opengl/gl_sphere.html
 
-#include "glm/fwd.hpp"
-#include "glm/matrix.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-
-#include <math.h>
-
 #include "Sphere.h"
+
+int UniverseObject::generate_rotation_offset() {
+    std::random_device rd;
+    std::mt19937 gen(rd()); // Mersenne Twister engine
+    std::uniform_int_distribution<> dis(0, MAX_ROTATION_OFFSET);
+    return dis(gen);
+}
 
 Sphere::Sphere(float radius, float orbit_distance, glm::vec3 orbit_axis){
 
     m_radius = radius;
     m_orbit_distance = orbit_distance;
     m_orbit_axis = orbit_axis;
+    m_rotation_offset = generate_rotation_offset();
     
     // build vertices and indices
     build_vertices();
@@ -46,7 +48,7 @@ void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
 
     glm::mat4 model = glm::mat4(1.0f);
     // rotate relative to orbit_axis
-    model *= glm::rotate(model, tick * TICK_ROTATION_FACTOR, m_orbit_axis);
+    model *= glm::rotate(model, (tick * TICK_ROTATION_FACTOR) + m_rotation_offset, m_orbit_axis);
     // TODO: translate relative to orbit axis
     model *= glm::translate(glm::mat4(1.0f), glm::vec3(m_orbit_distance, 0.0f, 0.0f));
 

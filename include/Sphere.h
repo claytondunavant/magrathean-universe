@@ -3,9 +3,15 @@
 #include <GL/glew.h>
 #include "glm/detail/qualifier.hpp"
 #include "glm/ext/vector_float3.hpp"
+#include "glm/fwd.hpp"
+#include "glm/matrix.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 #include <cmath>
 #include <vector>
+#include <cstdlib>
+#include <math.h>
+#include <random>
 
 #include "Shader.h"
 
@@ -13,16 +19,19 @@
 #define STACK_COUNT 18
 #define DEFAULT_RADIUS 0.05f
 #define TICK_ROTATION_FACTOR 0.025f // determines speed of roation of sphere around orbit axis
+#define MAX_ROTATION_OFFSET 100.0f // max offset of rotation. set to 0 to have all orbitals in a line
 
 class UniverseObject 
 {
-    
+public: 
     void set_radius(float radius);
+    int generate_rotation_offset();
 
 protected:
     float m_radius;
     float m_orbit_distance;
     glm::vec3 m_orbit_axis;
+    int m_rotation_offset;
 };
 
 // space where spheres and 
