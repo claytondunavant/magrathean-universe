@@ -18,7 +18,19 @@
 #include <cstdlib>
 #include <chrono>
 
-double time_since_epoch();
+class Tick {
+    public:
+        void inline tick_inc() {
+          tick++;
+        }
+
+        unsigned int inline get_tick() {
+          return tick;
+        }
+        
+    private:
+        unsigned int tick = 0;
+};
 
 void GLAPIENTRY
 debug_message_callback( GLenum source,

@@ -12,6 +12,7 @@ const unsigned int SCREEN_HEIGHT = 800;
 
 std::vector<Sphere *> spheres;
 Camera camera = Camera();
+Tick tick;
 
 void display() {
     
@@ -24,16 +25,9 @@ void display() {
     view = camera.get_view_matrix();
     projection = glm::perspective(glm::radians(45.0f), (float) SCREEN_WIDTH / (float) SCREEN_HEIGHT, 0.1f, 100.0f);
     
-    // rotate the spheres
-    float time = time_since_epoch() * 0.000000000005f;
-    glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), time, glm::vec3(0.0f, 0.0f, 1.0f));
-    
     for ( auto s : spheres ) {
 
-        glm::vec4 current_position = glm::vec4(s->get_position(), 1.0f);
-        s->set_position(rotationMatrix * current_position);
-        
-        s->draw(view, projection);
+        s->draw(view, projection, tick.get_tick());
     }
 
     glutSwapBuffers();
@@ -65,6 +59,7 @@ void processMouseFunc(int button, int state, int x, int y) {
 }
 
 void timer( int value ) {
+    tick.tick_inc();
     glutPostRedisplay();
     glutTimerFunc(16, timer, 0);
 }
@@ -103,10 +98,10 @@ int main(int argc, char** argv) {
     init(argc, argv);
     
     // prepare to render everything
-    Sphere * sphere = new Sphere(0.5f, glm::vec3(0.0f, 0.0f, 0.0f), 36, 18);
+    Sphere * sphere = new Sphere(0.5f, 0, glm::vec3(0.0f, 1.0f, 0.0f));
     spheres.push_back(sphere);
 
-    Sphere * sphere2 = new Sphere(0.2f, glm::vec3(-1.0f, 0.0f, 0.0f), 36, 18);
+    Sphere * sphere2 = new Sphere(0.2f,  1.0f, glm::vec3(0.0f, 1.0f, 0.0f));
     spheres.push_back(sphere2);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -114,4 +109,3 @@ int main(int argc, char** argv) {
     // call the main loop
     glutMainLoop();
 }
-

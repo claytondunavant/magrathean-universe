@@ -8,11 +8,11 @@
 
 #include "Sphere.h"
 
-Sphere::Sphere(float r, glm::vec3 position, int sector_count, int stack_count) {
-    this->r = r;
-    this->position = position;
-    this->sector_count = sector_count;
-    this->stack_count = stack_count; 
+Sphere::Sphere(float radius, float orbit_distance, glm::vec3 orbit_axis){
+
+    m_radius = radius;
+    m_orbit_distance = orbit_distance;
+    m_orbit_axis = orbit_axis;
     
     // build vertices and indices
     build_vertices();
@@ -40,13 +40,15 @@ Sphere::Sphere(float r, glm::vec3 position, int sector_count, int stack_count) {
 }
 
 // TODO: be able to draw two spheres
-void Sphere::draw(glm::mat4 view, glm::mat4 projection) {
+void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
 
     shader.use(); 
 
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    model *= glm::translate(glm::mat4(1.0f), position);
+    // rotate relative to orbit_axis
+    model *= glm::rotate(model, tick * TICK_ROTATION_FACTOR, m_orbit_axis);
+    // TODO: translate relative to orbit axis
+    model *= glm::translate(glm::mat4(1.0f), glm::vec3(m_orbit_distance, 0.0f, 0.0f));
 
     shader.setMat4("model", model);
     shader.setMat4("view", view);
@@ -62,25 +64,26 @@ void Sphere::draw(glm::mat4 view, glm::mat4 projection) {
     
 }
 
+// TODO: fix up vector
 void Sphere::build_vertices()
 {
     const float PI = acos(-1.f);
 
     float x, y, z, xy;      // vertex position
 
-    float sector_step = 2 * PI / sector_count;
-    float stack_step = PI / stack_count;
+    float sector_step = 2 * PI / SECTOR_COUNT;
+    float stack_step = PI / STACK_COUNT;
     float sector_angle, stack_angle;
 
     // iterate through stack (vertical panes on sphere)
-    for (int i = 0; i <= stack_count; ++i) {
+    for (int i = 0; i <= STACK_COUNT; ++i) {
         
         stack_angle = PI / 2 - i * stack_step; // start from pi/2 to -pi/2
-        xy = r * cosf(stack_angle); // r * cos(u)
-        z = r * sinf(stack_angle); // r * sin(u)
+        xy = m_radius * cosf(stack_angle); // r * cos(u)
+        z = m_radius * sinf(stack_angle); // r * sin(u)
                                 
         // iterate through sectors (horizontal panes on sphere) in this level of the stack
-        for (int j = 0; j <= sector_count; ++j) {
+        for (int j = 0; j <= SECTOR_COUNT; ++j) {
             sector_angle = j * sector_step; // start from 0 to 2pi
                                         
             // vertex position
@@ -98,11 +101,11 @@ void Sphere::build_vertices()
     // | /    |
     // k2 -- k2 + 1
     unsigned int k1, k2;
-    for (int i = 0; i < stack_count; ++i) {
-        k1 = i * (sector_count + 1); // begining of current stack
-        k2 = k1 + (sector_count + 1); // beginning of next stack
+    for (int i = 0; i < STACK_COUNT; ++i) {
+        k1 = i * (SECTOR_COUNT + 1); // begining of current stack
+        k2 = k1 + (SECTOR_COUNT + 1); // beginning of next stack
 
-        for (int j = 0; j < sector_count; ++j, ++k1, ++k2) {
+        for (int j = 0; j < SECTOR_COUNT; ++j, ++k1, ++k2) {
 
             // 2 triangles per sector excluding 1st and last stacks
             if ( i != 0 ) // add top triangle
@@ -110,7 +113,7 @@ void Sphere::build_vertices()
                 add_indices(k1, k2, k1+1); 
             }
 
-            if ( i != (stack_count - 1 )) // add bottom triangle
+            if ( i != (STACK_COUNT - 1 )) // add bottom triangle
             {
                 add_indices(k1+1, k2, k2+1);
             }
@@ -126,12 +129,8 @@ std::vector<unsigned int> Sphere::get_indices() {
    return indices; 
 }
 
-glm::vec3 Sphere::get_position() {
-    return position;
-}
-
-void Sphere::set_position(glm::vec3 new_position) {
-    position = new_position;
+glm::vec3 Sphere::get_orbit_axis() {
+    return m_orbit_axis;
 }
 
 void Sphere::add_vertex(float x, float y, float z) {

@@ -1,10 +1,5 @@
 #include "util.h"
 
-double time_since_epoch() {
-    auto now = std::chrono::system_clock::now();
-    return std::chrono::system_clock::to_time_t(now);
-}
-
 void GLAPIENTRY
 debug_message_callback( GLenum source,
                  GLenum type,
