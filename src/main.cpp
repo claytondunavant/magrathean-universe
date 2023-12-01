@@ -1,13 +1,9 @@
 // https://learnopengl.com/Getting-started/Coordinate-Systems
 // https://learnopengl.com/Getting-started/Camera
 
-#include "glm/fwd.hpp"
 #include "util.h"
-
-#include "Shader.h"
-#include "Sphere.h"
+#include "UniverseObjects.h"
 #include "Camera.h"
-#include <vector>
 
 const unsigned int SCREEN_WIDTH = 800;
 const unsigned int SCREEN_HEIGHT = 800;

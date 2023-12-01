@@ -13,14 +13,8 @@
 #include <math.h>
 #include <random>
 
+#include "macros.h"
 #include "Shader.h"
-
-#define SECTOR_COUNT 36
-#define STACK_COUNT 18
-#define DEFAULT_RADIUS 0.05f
-#define TICK_ROTATION_FACTOR 0.025f // determines speed of roation of sphere around orbit axis
-#define MAX_ROTATION_OFFSET 100.0f // max offset of rotation. set to 0 to have all orbitals in a line
-#define DOT_RADIUS 0.01f // default radius of dot used for debugging
 
 enum universe_object_type {
     sphere_type,

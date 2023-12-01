@@ -1,6 +1,6 @@
 //http://www.songho.ca/opengl/gl_sphere.html
 
-#include "Sphere.h"
+#include "UniverseObjects.h"
 #include "glm/detail/qualifier.hpp"
 #include <vector>
 

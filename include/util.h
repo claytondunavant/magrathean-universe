@@ -18,6 +18,8 @@
 #include <cstdlib>
 #include <chrono>
 
+#include "macros.h"
+
 class Tick {
     public:
         void inline tick_inc() {
