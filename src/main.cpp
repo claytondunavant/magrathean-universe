@@ -106,13 +106,11 @@ void init(int argc, char** argv) {
 void populate_universe(std::string string) {
     
     float distance = 0;
-    float distance_inc = 0.5f;
 
    for ( char c : string ) {
        
         if ( c == 'S' ) {
-            Sphere * s = new Sphere(DEFAULT_RADIUS, distance);
-            distance += distance_inc;
+            Sphere * s = new Sphere(DEFAULT_RADIUS, Universe->get_radius());
             Universe->add_sphere(s);
         } else {
             std::cout << "Incorrect Syntax!" << std::endl;
@@ -129,10 +127,18 @@ int main(int argc, char** argv) {
     init(argc, argv);
     
     // prepare to render everything
+    /*
     dots.push_back(new Dot(glm::vec3(0.0f, 0.0f, 0.0f))); // origin
     dots.push_back(new Dot(glm::vec3(1.0f, 0.0f, 0.0f))); // left & right
     dots.push_back(new Dot(glm::vec3(0.0f, 1.0f, 0.0f))); // up 
     dots.push_back(new Dot(glm::vec3(0.0f, 0.0f, 1.0f))); // towards & away from the screen
+    */
+    
+    // TODO: rotate around point p in space with orbit distance d
+    // manually rotate two spheres around these poins with different distances
+    dots.push_back(new Dot(glm::vec3(1.0f, 0.0f, 0.0f))); // left & right
+    dots.push_back(new Dot(glm::vec3(-1.0f, 0.0f, 0.0f))); // left & right
+    
 
     populate_universe(universe_string);
     

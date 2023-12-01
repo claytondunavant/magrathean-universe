@@ -31,6 +31,7 @@ public:
     int generate_rotation_offset();
     
     virtual universe_object_type get_type();
+    float get_radius();
     
 protected:
     float m_radius;

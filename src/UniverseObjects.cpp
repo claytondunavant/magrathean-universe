@@ -21,6 +21,10 @@ universe_object_type UniverseObject::get_type() {
     return uninit_type;
 }
 
+float UniverseObject::get_radius() {
+    return m_radius;
+}
+
 RenderSphere::RenderSphere(float radius, std::string vertex_shader_path, std::string fragment_shader_path) {
     m_radius = radius; 
 
@@ -169,6 +173,7 @@ universe_object_type Space::get_type() {
 
 void Space::add_sphere(Sphere * sphere) {
     m_orbits.push_back(sphere);
+    m_radius += 2 * (sphere->get_radius() + ORBIT_PADDING);
 }
 
 std::vector<UniverseObject *> Space::get_orbits(){
