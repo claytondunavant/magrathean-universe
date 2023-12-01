@@ -22,23 +22,17 @@
 #define MAX_ROTATION_OFFSET 100.0f // max offset of rotation. set to 0 to have all orbitals in a line
 #define DOT_RADIUS 0.01f // default radius of dot used for debugging
                 
-extern Shader sphere_shader;
-extern Shader dot_shader;
-
 // An object in the universe
 class UniverseObject 
 {
 public: 
-    UniverseObject(float radius, float orbit_distance, glm::vec3 orbit_axis);
+    UniverseObject(float radius, float orbit_distance);
 
     int generate_rotation_offset();
-
-    glm::vec3 get_orbit_axis();
 
 protected:
     float m_radius;
     float m_orbit_distance;
-    glm::vec3 m_orbit_axis;
     int m_rotation_offset;
 };
 
@@ -67,6 +61,8 @@ protected:
 
 // Space consisting of orbiting spheres and sub-spaces
 class Space : UniverseObject {
+public:
+   Space(float radius, float orbit_distance);
 
 private:
     std::vector<UniverseObject *> orbits;
@@ -76,7 +72,7 @@ private:
 class Sphere : UniverseObject, RenderSphere
 {
 public:
-    Sphere(float radius, float orbit_distance, glm::vec3 orbit_axis);
+    Sphere(float radius, float orbit_distance);
 
     void draw(glm::mat4 view, glm::mat4 projection, unsigned int tick);
 };

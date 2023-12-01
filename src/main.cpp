@@ -12,6 +12,8 @@
 const unsigned int SCREEN_WIDTH = 800;
 const unsigned int SCREEN_HEIGHT = 800;
 
+Space * Universe = new Space(0, 0);
+
 std::vector<Sphere *> spheres;
 std::vector<Dot *> dots;
 
@@ -100,6 +102,8 @@ void init(int argc, char** argv) {
     glDebugMessageCallback(debug_message_callback, nullptr);
 }
 
+
+
 int main(int argc, char** argv) {
     
     // initialize all the things
@@ -114,9 +118,8 @@ int main(int argc, char** argv) {
     // sphere render loop
     float distance = 0;
     float distance_inc = 0.5f;
-    glm::vec3 orbit_axis = glm::vec3(0.0f, 1.0f, 0.0f) ;
     for (int i = 0; i < 5; i++) {
-        Sphere * sphere = new Sphere(0.1f, distance, orbit_axis);
+        Sphere * sphere = new Sphere(0.1f, distance);
         spheres.push_back(sphere);
         distance += distance_inc;
     }

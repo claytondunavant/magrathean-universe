@@ -1,11 +1,11 @@
 //http://www.songho.ca/opengl/gl_sphere.html
 
 #include "Sphere.h"
+#include "glm/detail/qualifier.hpp"
 
-UniverseObject::UniverseObject(float radius, float orbit_distance, glm::vec3 orbit_axis){
+UniverseObject::UniverseObject(float radius, float orbit_distance){
     m_radius = radius;
     m_orbit_distance = orbit_distance;
-    m_orbit_axis = orbit_axis;
     m_rotation_offset = generate_rotation_offset();
 }
 
@@ -14,10 +14,6 @@ int UniverseObject::generate_rotation_offset() {
     std::mt19937 gen(rd()); // Mersenne Twister engine
     std::uniform_int_distribution<> dis(0, MAX_ROTATION_OFFSET);
     return dis(gen);
-}
-
-glm::vec3 UniverseObject::get_orbit_axis() {
-    return m_orbit_axis;
 }
 
 RenderSphere::RenderSphere(float radius, std::string vertex_shader_path, std::string fragment_shader_path) {
@@ -125,9 +121,15 @@ void RenderSphere::add_indices(float i1, float i2, float i3) {
     indices.push_back(i3);    
 }
 
+Space::Space(float radius, float orbit_distance) :
+UniverseObject(radius, orbit_distance)
+{
+
+}
+
 // this is insane and cool!
-Sphere::Sphere(float radius, float orbit_distance, glm::vec3 orbit_axis) : 
-UniverseObject(radius, orbit_distance, orbit_axis),
+Sphere::Sphere(float radius, float orbit_distance) : 
+UniverseObject(radius, orbit_distance),
 RenderSphere(radius, "../shaders/v.glsl", "../shaders/f.glsl")
 {}
 
@@ -136,8 +138,8 @@ void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
     shader.use(); 
 
     glm::mat4 model = glm::mat4(1.0f);
-    // rotate relative to orbit_axis
-    model *= glm::rotate(model, (tick * TICK_ROTATION_FACTOR) + m_rotation_offset, m_orbit_axis);
+    // rotate around up
+    model *= glm::rotate(model, (tick * TICK_ROTATION_FACTOR) + m_rotation_offset, glm::vec3(0.0f, 1.0f, 0.0f));
     // TODO: translate relative to orbit axis
     model *= glm::translate(glm::mat4(1.0f), glm::vec3(m_orbit_distance, 0.0f, 0.0f));
 
