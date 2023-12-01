@@ -49,8 +49,9 @@ public:
     std::vector<unsigned int> get_indices();
 
 protected:
-    void add_vertex(float x, float y, float z);
+    void add_vertex(float x, float y, float z, float u, float v);
     void add_indices(float i1, float i2, float i3);
+    void computeTextureCoordinates();
     
     float m_radius;
     
@@ -59,6 +60,10 @@ protected:
     unsigned int VAO, VBO, EBO;
     std::vector<float> vertices;
     std::vector<unsigned int> indices;
+
+    // texturing
+    std::vector<float> textureCoordinates;
+    
 };
 
 // Sphere in an orbit

@@ -33,8 +33,6 @@ if (WIN32)
 	# Specify include directories for the target
 	target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
-	# Link against GLEW
-	#target_link_libraries(${PROJECT_NAME} glew32)
 
 	# External libraries
 	set(LIBS

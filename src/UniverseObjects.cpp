@@ -55,6 +55,7 @@ void RenderSphere::build_vertices()
     const float PI = acos(-1.f);
 
     float x, y, z, xy;      // vertex position
+    float u, v;             // texture coordinates
 
     float sector_step = 2 * PI / SECTOR_COUNT;
     float stack_step = PI / STACK_COUNT;
@@ -75,7 +76,11 @@ void RenderSphere::build_vertices()
             x = xy * cosf(sector_angle); // r * cos(u) * cos(v)
             y = xy * sinf(sector_angle); // r * cos(u) * sin(v)
 
-            add_vertex(x, y, z);
+            // texture coordinates
+            u = static_cast<float>(j) / SECTOR_COUNT;
+            v = static_cast<float>(i) / STACK_COUNT;
+
+            add_vertex(x, y, z, u, v);
         }
     }
     
@@ -114,16 +119,23 @@ std::vector<unsigned int> RenderSphere::get_indices() {
    return indices; 
 }
 
-void RenderSphere::add_vertex(float x, float y, float z) {
+void RenderSphere::add_vertex(float x, float y, float z, float u, float v) {
     vertices.push_back(x);
     vertices.push_back(y);
     vertices.push_back(z);
+
+    textureCoordinates.push_back(u);
+    textureCoordinates.push_back(v);
 }
 
 void RenderSphere::add_indices(float i1, float i2, float i3) {
     indices.push_back(i1);
     indices.push_back(i2);    
     indices.push_back(i3);    
+}
+
+void RenderSphere::computeTextureCoordinates() {
+    // use spherical mapping
 }
 
 // this is insane and cool!
