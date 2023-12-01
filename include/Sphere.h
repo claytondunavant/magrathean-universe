@@ -21,7 +21,13 @@
 #define TICK_ROTATION_FACTOR 0.025f // determines speed of roation of sphere around orbit axis
 #define MAX_ROTATION_OFFSET 100.0f // max offset of rotation. set to 0 to have all orbitals in a line
 #define DOT_RADIUS 0.01f // default radius of dot used for debugging
-                
+
+enum universe_object_type {
+    sphere_type,
+    space_type,
+    uninit_type,
+};
+                         
 // An object in the universe
 class UniverseObject 
 {
@@ -29,7 +35,9 @@ public:
     UniverseObject(float radius, float orbit_distance);
 
     int generate_rotation_offset();
-
+    
+    virtual universe_object_type get_type();
+    
 protected:
     float m_radius;
     float m_orbit_distance;
@@ -59,23 +67,31 @@ protected:
     std::vector<unsigned int> indices;
 };
 
-// Space consisting of orbiting spheres and sub-spaces
-class Space : UniverseObject {
-public:
-   Space(float radius, float orbit_distance);
-
-private:
-    std::vector<UniverseObject *> orbits;
-};
-
 // Sphere in an orbit
-class Sphere : UniverseObject, RenderSphere
+class Sphere : public UniverseObject, RenderSphere
 {
 public:
     Sphere(float radius, float orbit_distance);
+    
+    universe_object_type get_type() override;
 
     void draw(glm::mat4 view, glm::mat4 projection, unsigned int tick);
 };
+
+// Space consisting of orbiting spheres and sub-spaces
+class Space : public UniverseObject {
+public:
+   Space(float radius, float orbit_distance);
+
+    universe_object_type get_type() override;
+   
+   void add_sphere(Sphere * sphere);
+   std::vector<UniverseObject *> get_orbits();
+
+private:
+    std::vector<UniverseObject *> m_orbits;
+};
+
 
 // Be able to draw dots (small spheres) for debugging
 class Dot : RenderSphere

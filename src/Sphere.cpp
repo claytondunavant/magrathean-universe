@@ -2,6 +2,7 @@
 
 #include "Sphere.h"
 #include "glm/detail/qualifier.hpp"
+#include <vector>
 
 UniverseObject::UniverseObject(float radius, float orbit_distance){
     m_radius = radius;
@@ -14,6 +15,10 @@ int UniverseObject::generate_rotation_offset() {
     std::mt19937 gen(rd()); // Mersenne Twister engine
     std::uniform_int_distribution<> dis(0, MAX_ROTATION_OFFSET);
     return dis(gen);
+}
+
+universe_object_type UniverseObject::get_type() {
+    return uninit_type;
 }
 
 RenderSphere::RenderSphere(float radius, std::string vertex_shader_path, std::string fragment_shader_path) {
@@ -121,17 +126,15 @@ void RenderSphere::add_indices(float i1, float i2, float i3) {
     indices.push_back(i3);    
 }
 
-Space::Space(float radius, float orbit_distance) :
-UniverseObject(radius, orbit_distance)
-{
-
-}
-
 // this is insane and cool!
 Sphere::Sphere(float radius, float orbit_distance) : 
 UniverseObject(radius, orbit_distance),
 RenderSphere(radius, "../shaders/v.glsl", "../shaders/f.glsl")
 {}
+
+universe_object_type Sphere::get_type() {
+    return sphere_type;
+}
 
 void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
 
@@ -154,6 +157,22 @@ void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
     if (error != GL_NO_ERROR) {
         std::cerr << "OpenGL error: " << error << std::endl;
     }
+}
+
+Space::Space(float radius, float orbit_distance) :
+UniverseObject(radius, orbit_distance)
+{}
+
+universe_object_type Space::get_type() {
+    return space_type;
+}
+
+void Space::add_sphere(Sphere * sphere) {
+    m_orbits.push_back(sphere);
+}
+
+std::vector<UniverseObject *> Space::get_orbits(){
+    return m_orbits;
 }
 
 Dot::Dot(glm::vec3 postion) :

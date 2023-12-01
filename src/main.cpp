@@ -35,9 +35,14 @@ void display() {
         dot->draw(view, projection);
     }
     
-    for ( auto sphere : spheres ) {
+    for ( auto obj : Universe->get_orbits() ) {
+        
+        // cheating polymorphism, one enum at a time
+        if ( obj->get_type() == sphere_type ) {
+            Sphere * sphere = static_cast<Sphere *>(obj);
+            sphere->draw(view, projection, tick.get_tick()); 
+        }
 
-        sphere->draw(view, projection, tick.get_tick());
     }
 
     glutSwapBuffers();
@@ -102,9 +107,27 @@ void init(int argc, char** argv) {
     glDebugMessageCallback(debug_message_callback, nullptr);
 }
 
+void populate_universe(std::string string) {
+    
+    float distance = 0;
+    float distance_inc = 0.5f;
 
+   for ( char c : string ) {
+       
+        if ( c == 'S' ) {
+            Sphere * s = new Sphere(DEFAULT_RADIUS, distance);
+            distance += distance_inc;
+            Universe->add_sphere(s);
+        } else {
+            std::cout << "Incorrect Syntax!" << std::endl;
+            return;
+        }
+   }
+}
 
 int main(int argc, char** argv) {
+    
+    std::string universe_string = "SSS";
     
     // initialize all the things
     init(argc, argv);
@@ -115,14 +138,7 @@ int main(int argc, char** argv) {
     dots.push_back(new Dot(glm::vec3(0.0f, 1.0f, 0.0f))); // up 
     dots.push_back(new Dot(glm::vec3(0.0f, 0.0f, 1.0f))); // towards & away from the screen
 
-    // sphere render loop
-    float distance = 0;
-    float distance_inc = 0.5f;
-    for (int i = 0; i < 5; i++) {
-        Sphere * sphere = new Sphere(0.1f, distance);
-        spheres.push_back(sphere);
-        distance += distance_inc;
-    }
+    populate_universe(universe_string);
     
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     
