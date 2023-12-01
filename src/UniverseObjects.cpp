@@ -133,7 +133,7 @@ void RenderSphere::add_indices(float i1, float i2, float i3) {
 // this is insane and cool!
 Sphere::Sphere(float radius, float orbit_distance) : 
 UniverseObject(radius, orbit_distance),
-RenderSphere(radius, "../shaders/v.glsl", "../shaders/f.glsl")
+RenderSphere(radius, "../../../shaders/v.glsl", "../../../shaders/f.glsl")
 {}
 
 universe_object_type Sphere::get_type() {
@@ -181,7 +181,8 @@ std::vector<UniverseObject *> Space::get_orbits(){
 }
 
 Dot::Dot(glm::vec3 postion) :
-RenderSphere(DOT_RADIUS, "../shaders/v.glsl", "../shaders/f_dot.glsl")
+    // fix issue with relative paths
+RenderSphere(DOT_RADIUS, "../../../shaders/v.glsl", "../../../shaders/f_dot.glsl")
 {
     m_position = postion;
 }

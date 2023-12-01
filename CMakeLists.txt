@@ -16,21 +16,42 @@ file(GLOB SOURCES "src/*.cpp")
 include_directories("include")
 
 if (WIN32)
-	# External libraries
-	set(LIBS
-		opengl32
-		freeglut
-	)
+	# set path to GLEW
+	set(GLEW_ROOT_PATH "C:/Users/shiss/Downloads/glew-2.1.0-win32/glew-2.1.0")
+
+	# Include GLEW
+	include_directories(${GLEW_ROOT_PATH}/include)
+	# Specify the GLEW library directory
+	link_directories(${GLEW_ROOT_PATH}/lib/Release/x64)
 
 	# Additional library directory
 	link_directories(${CMAKE_SOURCE_DIR}/lib/x64)
-	include_directories(${CMAKE_SOURCE_DIR}/include)
 
 	# Add the executable
 	add_executable(${PROJECT_NAME} ${SOURCES})
 
 	# Specify include directories for the target
 	target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+	# Link against GLEW
+	#target_link_libraries(${PROJECT_NAME} glew32)
+
+	# External libraries
+	set(LIBS
+		opengl32
+		freeglut
+		glew32
+	)
+
+	# Link external libraries
+	target_link_libraries(${PROJECT_NAME} ${LIBS})
+
+	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                       "${GLEW_ROOT_PATH}/bin/Release/x64/glew32.dll"
+                       $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+
+	
 
 elseif (UNIX)
 	# External libraries
@@ -42,7 +63,9 @@ elseif (UNIX)
 
 	# Add the executable
 	add_executable(${PROJECT_NAME} ${SOURCES})
+
+	# Link external libraries
+	target_link_libraries(${PROJECT_NAME} ${LIBS})
 endif()
 
-# Link external libraries
-target_link_libraries(${PROJECT_NAME} ${LIBS})
+
