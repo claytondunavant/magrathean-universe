@@ -1,16 +1,20 @@
 // https://learnopengl.com/Getting-started/Coordinate-Systems
 // https://learnopengl.com/Getting-started/Camera
 
+#include "glm/fwd.hpp"
 #include "util.h"
 
 #include "Shader.h"
 #include "Sphere.h"
 #include "Camera.h"
+#include <vector>
 
 const unsigned int SCREEN_WIDTH = 800;
 const unsigned int SCREEN_HEIGHT = 800;
 
 std::vector<Sphere *> spheres;
+std::vector<Dot *> dots;
+
 Camera camera = Camera();
 Tick tick;
 
@@ -25,9 +29,13 @@ void display() {
     view = camera.get_view_matrix();
     projection = glm::perspective(glm::radians(45.0f), (float) SCREEN_WIDTH / (float) SCREEN_HEIGHT, 0.1f, 100.0f);
     
-    for ( auto s : spheres ) {
+    for ( auto dot : dots ) {
+        dot->draw(view, projection);
+    }
+    
+    for ( auto sphere : spheres ) {
 
-        s->draw(view, projection, tick.get_tick());
+        sphere->draw(view, projection, tick.get_tick());
     }
 
     glutSwapBuffers();
@@ -98,6 +106,12 @@ int main(int argc, char** argv) {
     init(argc, argv);
     
     // prepare to render everything
+    dots.push_back(new Dot(glm::vec3(0.0f, 0.0f, 0.0f))); // origin
+    dots.push_back(new Dot(glm::vec3(1.0f, 0.0f, 0.0f))); // left & right
+    dots.push_back(new Dot(glm::vec3(0.0f, 1.0f, 0.0f))); // up 
+    dots.push_back(new Dot(glm::vec3(0.0f, 0.0f, 1.0f))); // towards & away from the screen
+
+    // sphere render loop
     float distance = 0;
     float distance_inc = 0.5f;
     glm::vec3 orbit_axis = glm::vec3(0.0f, 1.0f, 0.0f) ;

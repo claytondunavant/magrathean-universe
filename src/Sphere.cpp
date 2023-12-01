@@ -2,6 +2,13 @@
 
 #include "Sphere.h"
 
+UniverseObject::UniverseObject(float radius, float orbit_distance, glm::vec3 orbit_axis){
+    m_radius = radius;
+    m_orbit_distance = orbit_distance;
+    m_orbit_axis = orbit_axis;
+    m_rotation_offset = generate_rotation_offset();
+}
+
 int UniverseObject::generate_rotation_offset() {
     std::random_device rd;
     std::mt19937 gen(rd()); // Mersenne Twister engine
@@ -9,19 +16,19 @@ int UniverseObject::generate_rotation_offset() {
     return dis(gen);
 }
 
-Sphere::Sphere(float radius, float orbit_distance, glm::vec3 orbit_axis){
+glm::vec3 UniverseObject::get_orbit_axis() {
+    return m_orbit_axis;
+}
 
-    m_radius = radius;
-    m_orbit_distance = orbit_distance;
-    m_orbit_axis = orbit_axis;
-    m_rotation_offset = generate_rotation_offset();
-    
+RenderSphere::RenderSphere(float radius, std::string vertex_shader_path, std::string fragment_shader_path) {
+    m_radius = radius; 
+
     // build vertices and indices
     build_vertices();
     
     // TODO: make not relative paths ??
     // init shader
-    shader = Shader("../shaders/v.glsl", "../shaders/f.glsl");
+    shader = Shader(vertex_shader_path.c_str(), fragment_shader_path.c_str());
 
     // init rendering
     glGenVertexArrays(1, &VAO);
@@ -41,33 +48,8 @@ Sphere::Sphere(float radius, float orbit_distance, glm::vec3 orbit_axis){
     glEnableVertexAttribArray(0); // enable the vertex attrib at location 0
 }
 
-// TODO: be able to draw two spheres
-void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
-
-    shader.use(); 
-
-    glm::mat4 model = glm::mat4(1.0f);
-    // rotate relative to orbit_axis
-    model *= glm::rotate(model, (tick * TICK_ROTATION_FACTOR) + m_rotation_offset, m_orbit_axis);
-    // TODO: translate relative to orbit axis
-    model *= glm::translate(glm::mat4(1.0f), glm::vec3(m_orbit_distance, 0.0f, 0.0f));
-
-    shader.setMat4("model", model);
-    shader.setMat4("view", view);
-    shader.setMat4("projection", projection);
-   
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0 );
-
-    GLenum error = glGetError();
-    if (error != GL_NO_ERROR) {
-        std::cerr << "OpenGL error: " << error << std::endl;
-    }
-    
-}
-
 // TODO: fix up vector
-void Sphere::build_vertices()
+void RenderSphere::build_vertices()
 {
     const float PI = acos(-1.f);
 
@@ -123,26 +105,78 @@ void Sphere::build_vertices()
     }
 }
 
-std::vector<float> Sphere::get_vertices() {
+std::vector<float> RenderSphere::get_vertices() {
    return vertices; 
 }
 
-std::vector<unsigned int> Sphere::get_indices() {
+std::vector<unsigned int> RenderSphere::get_indices() {
    return indices; 
 }
 
-glm::vec3 Sphere::get_orbit_axis() {
-    return m_orbit_axis;
-}
-
-void Sphere::add_vertex(float x, float y, float z) {
+void RenderSphere::add_vertex(float x, float y, float z) {
     vertices.push_back(x);
     vertices.push_back(y);
     vertices.push_back(z);
 }
 
-void Sphere::add_indices(float i1, float i2, float i3) {
+void RenderSphere::add_indices(float i1, float i2, float i3) {
     indices.push_back(i1);
     indices.push_back(i2);    
     indices.push_back(i3);    
+}
+
+// this is insane and cool!
+Sphere::Sphere(float radius, float orbit_distance, glm::vec3 orbit_axis) : 
+UniverseObject(radius, orbit_distance, orbit_axis),
+RenderSphere(radius, "../shaders/v.glsl", "../shaders/f.glsl")
+{}
+
+void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
+
+    shader.use(); 
+
+    glm::mat4 model = glm::mat4(1.0f);
+    // rotate relative to orbit_axis
+    model *= glm::rotate(model, (tick * TICK_ROTATION_FACTOR) + m_rotation_offset, m_orbit_axis);
+    // TODO: translate relative to orbit axis
+    model *= glm::translate(glm::mat4(1.0f), glm::vec3(m_orbit_distance, 0.0f, 0.0f));
+
+    shader.setMat4("model", model);
+    shader.setMat4("view", view);
+    shader.setMat4("projection", projection);
+   
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0 );
+
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        std::cerr << "OpenGL error: " << error << std::endl;
+    }
+}
+
+Dot::Dot(glm::vec3 postion) :
+RenderSphere(DOT_RADIUS, "../shaders/v.glsl", "../shaders/f_dot.glsl")
+{
+    m_position = postion;
+}
+
+void Dot::draw(glm::mat4 view, glm::mat4 projection) {
+    
+    shader.use();
+
+    glm::mat4 model = glm::mat4(1.0f);
+    // TODO: translate relative to orbit axis
+    model *= glm::translate(glm::mat4(1.0f), m_position);
+
+    shader.setMat4("model", model);
+    shader.setMat4("view", view);
+    shader.setMat4("projection", projection);
+   
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0 );
+
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        std::cerr << "OpenGL error: " << error << std::endl;
+    }
 }

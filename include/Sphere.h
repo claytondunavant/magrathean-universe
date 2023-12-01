@@ -20,12 +20,20 @@
 #define DEFAULT_RADIUS 0.05f
 #define TICK_ROTATION_FACTOR 0.025f // determines speed of roation of sphere around orbit axis
 #define MAX_ROTATION_OFFSET 100.0f // max offset of rotation. set to 0 to have all orbitals in a line
+#define DOT_RADIUS 0.01f // default radius of dot used for debugging
+                
+extern Shader sphere_shader;
+extern Shader dot_shader;
 
+// An object in the universe
 class UniverseObject 
 {
 public: 
-    void set_radius(float radius);
+    UniverseObject(float radius, float orbit_distance, glm::vec3 orbit_axis);
+
     int generate_rotation_offset();
+
+    glm::vec3 get_orbit_axis();
 
 protected:
     float m_radius;
@@ -34,34 +42,53 @@ protected:
     int m_rotation_offset;
 };
 
-// space where spheres and 
+// Everything needed to render a sphere except the draw function
+class RenderSphere 
+{
+public:
+    RenderSphere(float radius, std::string vertex_shader_path, std::string fragment_shader_path);
+    
+    void build_vertices();
+    std::vector<float> get_vertices();
+    std::vector<unsigned int> get_indices();
+
+protected:
+    void add_vertex(float x, float y, float z);
+    void add_indices(float i1, float i2, float i3);
+    
+    float m_radius;
+    
+    // rendering
+    Shader shader;
+    unsigned int VAO, VBO, EBO;
+    std::vector<float> vertices;
+    std::vector<unsigned int> indices;
+};
+
+// Space consisting of orbiting spheres and sub-spaces
 class Space : UniverseObject {
 
 private:
     std::vector<UniverseObject *> orbits;
 };
 
-class Sphere : UniverseObject
+// Sphere in an orbit
+class Sphere : UniverseObject, RenderSphere
 {
 public:
     Sphere(float radius, float orbit_distance, glm::vec3 orbit_axis);
 
-    void build_vertices();
     void draw(glm::mat4 view, glm::mat4 projection, unsigned int tick);
-    
-    std::vector<float> get_vertices();
-    std::vector<unsigned int> get_indices();
-    glm::vec3 get_orbit_axis();
+};
+
+// Be able to draw dots (small spheres) for debugging
+class Dot : RenderSphere
+{
+public:
+    Dot(glm::vec3 position);
+
+    void draw(glm::mat4 view, glm::mat4 projection);
 
 private:
-    
-    void add_vertex(float x, float y, float z);
-    void add_indices(float i1, float i2, float i3);
-    
-    // rendering
-    Shader shader;
-    unsigned int VAO, VBO, EBO;
-
-    std::vector<float> vertices;
-    std::vector<unsigned int> indices;
+    glm::vec3 m_position; 
 };
