@@ -70,13 +70,17 @@ protected:
 class Sphere : public UniverseObject, RenderSphere
 {
 public:
-    Sphere(float radius, float orbit_distance);
+    Sphere(float radius, float orbit_distance, std::string path_to_texture);
     
     universe_object_type get_type() override;
 
     GLuint load_texture(const char* fileName);
 
     void draw(glm::mat4 view, glm::mat4 projection, unsigned int tick);
+
+private:
+    std::string path_to_texture;
+    GLuint texture_id;
 };
 
 // Space consisting of orbiting spheres and sub-spaces

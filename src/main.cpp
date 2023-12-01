@@ -107,11 +107,14 @@ void populate_universe(std::string string) {
     
     float distance = 0;
     float distance_inc = 0.5f;
+    std::string path_to_texture;
 
    for ( char c : string ) {
        
         if ( c == 'S' ) {
-            Sphere * s = new Sphere(DEFAULT_RADIUS, distance);
+            // get random path to texture
+            path_to_texture = "../../../assets/textures/venus_surface.jpg";
+            Sphere * s = new Sphere(DEFAULT_RADIUS, distance, path_to_texture);
             distance += distance_inc;
             Universe->add_sphere(s);
         } else {
@@ -136,7 +139,7 @@ int main(int argc, char** argv) {
 
     populate_universe(universe_string);
     
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     
     // call the main loop
     glutMainLoop();

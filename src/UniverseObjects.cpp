@@ -1,5 +1,7 @@
 //http://www.songho.ca/opengl/gl_sphere.html
 
+#define STB_IMAGE_IMPLEMENTATION
+
 #include "UniverseObjects.h"
 #include "glm/detail/qualifier.hpp"
 #include <vector>
@@ -40,14 +42,28 @@ RenderSphere::RenderSphere(float radius, std::string vertex_shader_path, std::st
     // bind Vertex Array Object
     glBindVertexArray(VAO); 
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO); 
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vertices[0]), vertices.data(), GL_STATIC_DRAW);
+    // interleave data and buffer it
+    std::vector<float> interleavedData;
+    for (size_t i = 0; i < vertices.size(); i += 3) {
+        interleavedData.push_back(vertices[i]);
+        interleavedData.push_back(vertices[i + 1]);
+        interleavedData.push_back(vertices[i + 2]);
+        interleavedData.push_back(texture_coordinates[i / 3]);
+        interleavedData.push_back(texture_coordinates[i / 3 + 1]);
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, interleavedData.size() * sizeof(interleavedData[0]), interleavedData.data(), GL_STATIC_DRAW);
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
     
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0); // enable the vertex attrib at location 0
+    // set up vertex attributes
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
 }
 
 // TODO: fix up vector
@@ -135,18 +151,56 @@ void RenderSphere::add_indices(float i1, float i2, float i3) {
     indices.push_back(i3);    
 }
 
-void RenderSphere::compute_texture_coordinates() {
-    // use spherical mapping
-}
 
 // this is insane and cool!
-Sphere::Sphere(float radius, float orbit_distance) : 
+Sphere::Sphere(float radius, float orbit_distance, std::string path_to_texture) : 
 UniverseObject(radius, orbit_distance),
 RenderSphere(radius, "../../../shaders/v.glsl", "../../../shaders/f.glsl")
-{}
+{
+    Sphere::path_to_texture = path_to_texture;
+    texture_id = load_texture(path_to_texture.c_str());
+}
 
 universe_object_type Sphere::get_type() {
     return sphere_type;
+}
+
+GLuint Sphere::load_texture(const char* fileName) {
+    GLuint texture_id;
+    glGenTextures(1, &texture_id);
+
+    int width, height, channels;
+    stbi_set_flip_vertically_on_load(true); // Flip vertically because OpenGL textures are flipped
+    unsigned char* data = stbi_load(fileName, &width, &height, &channels, 0);
+
+    if (data)
+    {
+        GLenum format = (channels == 3) ? GL_RGB : GL_RGBA;
+
+        glBindTexture(GL_TEXTURE_2D, texture_id);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        // Set texture parameters (optional)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cerr << "Failed to load texture at path: " << fileName << std::endl;
+        stbi_image_free(data);
+        glDeleteTextures(1, &texture_id);
+        texture_id = 0;
+    }
+
+    return texture_id;
+
 }
 
 void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
@@ -164,10 +218,17 @@ void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
     shader.setMat4("projection", projection);
    
     // texturing
-    //GLuint textureID = loadTexture("path/to/your/texture.jpg");
+    
+    // Use the texture in your shader
+    shader.setInt("textureSampler", 0); // Set the texture unit
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0 );
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    //glDeleteTextures(1, &texture_id);
 
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
