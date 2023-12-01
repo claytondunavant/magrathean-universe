@@ -51,7 +51,7 @@ public:
 protected:
     void add_vertex(float x, float y, float z, float u, float v);
     void add_indices(float i1, float i2, float i3);
-    void computeTextureCoordinates();
+    void compute_texture_coordinates();
     
     float m_radius;
     
@@ -62,7 +62,7 @@ protected:
     std::vector<unsigned int> indices;
 
     // texturing
-    std::vector<float> textureCoordinates;
+    std::vector<float> texture_coordinates;
     
 };
 
@@ -73,6 +73,8 @@ public:
     Sphere(float radius, float orbit_distance);
     
     universe_object_type get_type() override;
+
+    GLuint load_texture(const char* fileName);
 
     void draw(glm::mat4 view, glm::mat4 projection, unsigned int tick);
 };

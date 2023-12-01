@@ -44,6 +44,9 @@ if (WIN32)
 	# Link external libraries
 	target_link_libraries(${PROJECT_NAME} ${LIBS})
 
+	# Link against stb_image.h
+	target_sources(${PROJECT_NAME} PRIVATE include/stb_image.h)
+
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
                        "${GLEW_ROOT_PATH}/bin/Release/x64/glew32.dll"

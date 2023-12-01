@@ -3,6 +3,7 @@
 #include "UniverseObjects.h"
 #include "glm/detail/qualifier.hpp"
 #include <vector>
+#include "stb_image.h"
 
 UniverseObject::UniverseObject(float radius, float orbit_distance){
     m_radius = radius;
@@ -124,8 +125,8 @@ void RenderSphere::add_vertex(float x, float y, float z, float u, float v) {
     vertices.push_back(y);
     vertices.push_back(z);
 
-    textureCoordinates.push_back(u);
-    textureCoordinates.push_back(v);
+    texture_coordinates.push_back(u);
+    texture_coordinates.push_back(v);
 }
 
 void RenderSphere::add_indices(float i1, float i2, float i3) {
@@ -134,7 +135,7 @@ void RenderSphere::add_indices(float i1, float i2, float i3) {
     indices.push_back(i3);    
 }
 
-void RenderSphere::computeTextureCoordinates() {
+void RenderSphere::compute_texture_coordinates() {
     // use spherical mapping
 }
 
@@ -162,6 +163,9 @@ void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
     shader.setMat4("view", view);
     shader.setMat4("projection", projection);
    
+    // texturing
+    //GLuint textureID = loadTexture("path/to/your/texture.jpg");
+
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0 );
 
