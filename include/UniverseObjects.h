@@ -1,6 +1,7 @@
 //http://www.songho.ca/opengl/gl_sphere.html
 
 #include <GL/glew.h>
+
 #include "glm/detail/qualifier.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "glm/fwd.hpp"
@@ -26,7 +27,7 @@ enum universe_object_type {
 class UniverseObject 
 {
 public: 
-    UniverseObject(float radius, float orbit_distance);
+    UniverseObject(float radius, float orbit_distance, glm::vec3 orbit_center);
 
     int generate_rotation_offset();
     
@@ -36,6 +37,7 @@ public:
 protected:
     float m_radius;
     float m_orbit_distance;
+    glm::vec3 m_orbit_center;
     int m_rotation_offset;
 };
 
@@ -66,7 +68,7 @@ protected:
 class Sphere : public UniverseObject, RenderSphere
 {
 public:
-    Sphere(float radius, float orbit_distance);
+    Sphere(float radius, float orbit_distance, glm::vec3 orbit_center);
     
     universe_object_type get_type() override;
 
@@ -76,7 +78,7 @@ public:
 // Space consisting of orbiting spheres and sub-spaces
 class Space : public UniverseObject {
 public:
-   Space(float radius, float orbit_distance);
+   Space(float radius, float orbit_distance, glm::vec3 orbit_center);
 
     universe_object_type get_type() override;
    

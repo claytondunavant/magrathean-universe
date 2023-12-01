@@ -2,7 +2,6 @@
 
 #include "GL/freeglut_std.h"
 
-#include <glm/glm.hpp>
 #include "glm/detail/qualifier.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/geometric.hpp"

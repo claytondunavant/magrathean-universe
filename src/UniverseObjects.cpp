@@ -1,12 +1,13 @@
 //http://www.songho.ca/opengl/gl_sphere.html
 
-#include "UniverseObjects.h"
-#include "glm/detail/qualifier.hpp"
 #include <vector>
 
-UniverseObject::UniverseObject(float radius, float orbit_distance){
+#include "UniverseObjects.h"
+
+UniverseObject::UniverseObject(float radius, float orbit_distance, glm::vec3 orbit_center){
     m_radius = radius;
     m_orbit_distance = orbit_distance;
+    m_orbit_center = orbit_center;
     m_rotation_offset = generate_rotation_offset();
 }
 
@@ -131,8 +132,8 @@ void RenderSphere::add_indices(float i1, float i2, float i3) {
 }
 
 // this is insane and cool!
-Sphere::Sphere(float radius, float orbit_distance) : 
-UniverseObject(radius, orbit_distance),
+Sphere::Sphere(float radius, float orbit_distance, glm::vec3 orbit_center) : 
+UniverseObject(radius, orbit_distance, orbit_center),
 RenderSphere(radius, "../../../shaders/v.glsl", "../../../shaders/f.glsl")
 {}
 
@@ -143,12 +144,18 @@ universe_object_type Sphere::get_type() {
 void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
 
     shader.use(); 
+    
+    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+    float current_angle = (tick * TICK_ROTATION_FACTOR) + m_rotation_offset;
 
-    glm::mat4 model = glm::mat4(1.0f);
-    // rotate around up
-    model *= glm::rotate(model, (tick * TICK_ROTATION_FACTOR) + m_rotation_offset, glm::vec3(0.0f, 1.0f, 0.0f));
-    // TODO: translate relative to orbit axis
-    model *= glm::translate(glm::mat4(1.0f), glm::vec3(m_orbit_distance, 0.0f, 0.0f));
+    // orbit center corrds matrix
+    glm::mat4 center_matrix = glm::translate(glm::mat4(1.0f), m_orbit_center);
+    // rotate current angle around the up axis
+    glm::mat4 rotation_matrix = glm::rotate(glm::mat4(1.0f), current_angle, up);
+    // translate out the z by orbit distance    
+    glm::mat4 translation_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(m_orbit_distance, 0.0f, 0.0f));
+
+    glm::mat4 model = center_matrix * rotation_matrix * translation_matrix;
 
     shader.setMat4("model", model);
     shader.setMat4("view", view);
@@ -163,8 +170,8 @@ void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
     }
 }
 
-Space::Space(float radius, float orbit_distance) :
-UniverseObject(radius, orbit_distance)
+Space::Space(float radius, float orbit_distance, glm::vec3 orbit_center) :
+UniverseObject(radius, orbit_distance, orbit_center)
 {}
 
 universe_object_type Space::get_type() {
