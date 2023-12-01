@@ -51,7 +51,6 @@ public:
 protected:
     void add_vertex(float x, float y, float z, float u, float v);
     void add_indices(float i1, float i2, float i3);
-    void compute_texture_coordinates();
     
     float m_radius;
     
@@ -79,7 +78,7 @@ public:
     void draw(glm::mat4 view, glm::mat4 projection, unsigned int tick);
 
 private:
-    std::string path_to_texture;
+
     GLuint texture_id;
 };
 

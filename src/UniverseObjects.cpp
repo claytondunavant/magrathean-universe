@@ -97,7 +97,7 @@ void RenderSphere::build_vertices()
             u = static_cast<float>(j) / SECTOR_COUNT;
             v = static_cast<float>(i) / STACK_COUNT;
 
-            add_vertex(x, y, z, u, v);
+            add_vertex(x, z, y, u, v);
         }
     }
     
@@ -157,7 +157,7 @@ Sphere::Sphere(float radius, float orbit_distance, std::string path_to_texture) 
 UniverseObject(radius, orbit_distance),
 RenderSphere(radius, "../../../shaders/v.glsl", "../../../shaders/f.glsl")
 {
-    Sphere::path_to_texture = path_to_texture;
+
     texture_id = load_texture(path_to_texture.c_str());
 }
 
@@ -181,7 +181,7 @@ GLuint Sphere::load_texture(const char* fileName) {
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        // Set texture parameters (optional)
+        // texture parameters
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -216,9 +216,7 @@ void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
     shader.setMat4("model", model);
     shader.setMat4("view", view);
     shader.setMat4("projection", projection);
-   
-    // texturing
-    
+
     // Use the texture in your shader
     shader.setInt("textureSampler", 0); // Set the texture unit
     glActiveTexture(GL_TEXTURE0);
