@@ -26,8 +26,12 @@ float UniverseObject::get_radius() {
     return m_radius;
 }
 
+float UniverseObject::get_orbit_distance() {
+    return m_orbit_distance;
+}
+
 RenderSphere::RenderSphere(float radius, std::string vertex_shader_path, std::string fragment_shader_path) {
-    m_radius = radius; 
+    m_render_radius = radius; 
 
     // build vertices and indices
     build_vertices();
@@ -69,8 +73,8 @@ void RenderSphere::build_vertices()
     for (int i = 0; i <= STACK_COUNT; ++i) {
         
         stack_angle = PI / 2 - i * stack_step; // start from pi/2 to -pi/2
-        xy = m_radius * cosf(stack_angle); // r * cos(u)
-        z = m_radius * sinf(stack_angle); // r * sin(u)
+        xy = m_render_radius * cosf(stack_angle); // r * cos(u)
+        z = m_render_radius * sinf(stack_angle); // r * sin(u)
                                 
         // iterate through sectors (horizontal panes on sphere) in this level of the stack
         for (int j = 0; j <= SECTOR_COUNT; ++j) {
@@ -141,6 +145,11 @@ universe_object_type Sphere::get_type() {
     return sphere_type;
 }
 
+void Sphere::set_orbit_center(glm::vec3 orbit_center) {
+    m_orbit_center = orbit_center; 
+}
+
+
 void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
 
     shader.use(); 
@@ -170,6 +179,13 @@ void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
     }
 }
 
+void Sphere::print() {
+    std::cout << "m_radius: " << m_radius << std::endl;
+    std::cout << "m_orbit_distance: " << m_orbit_distance << std::endl;
+    std::cout << "m_orbit_center: " << m_orbit_center.x << "," << m_orbit_center.y << "," << m_orbit_center.z << std::endl;
+    std::cout << "m_rotation_offset: " << m_rotation_offset << std::endl;
+}
+
 Space::Space(float radius, float orbit_distance, glm::vec3 orbit_center) :
 UniverseObject(radius, orbit_distance, orbit_center)
 {}
@@ -178,13 +194,126 @@ universe_object_type Space::get_type() {
     return space_type;
 }
 
+// add a sphere to the space, update the radius and center point
 void Space::add_sphere(Sphere * sphere) {
+    
+    // add sphere to orbits
     m_orbits.push_back(sphere);
-    m_radius += 2 * (sphere->get_radius() + ORBIT_PADDING);
+    
+    // if this is the center, the radius only goes up by the radius of the object
+    float added_radius;
+    if ( m_orbits.size() == 1 ) {
+        added_radius = sphere->get_radius() + ORBIT_PADDING;
+    // otherwise the radius of the space is increased by 2(radius + padding)
+    } else {
+        added_radius = 2 * (sphere->get_radius() + ORBIT_PADDING);
+    }
+    
+    // increase the radius
+    m_radius += added_radius;
+    
+    // shift the orbit center if this is an oribiting space
+    if ( m_orbit_center != glm::vec3(0.0f, 0.0f, 0.0f) ) {
+        shift_orbit_center_right(added_radius);
+    }
+}
+
+void Space::add_space(Space * space) {
+    m_orbits.push_back(space);
+    
+    // if this is the center, the radius only goes up by the radius of the object
+    float added_radius;
+    if ( m_orbits.size() == 1 ) {
+        added_radius = space->get_radius() + ORBIT_PADDING;
+    // otherwise the radius of the space is increased by 2(radius + padding)
+    } else {
+        added_radius = 2 * (space->get_radius() + ORBIT_PADDING);
+    }
+    
+    m_radius += added_radius;
+    
+    if ( m_orbit_center != glm::vec3(0.0f, 0.0f, 0.0f)) {
+        shift_orbit_center_right(added_radius);
+    }
 }
 
 std::vector<UniverseObject *> Space::get_orbits(){
     return m_orbits;
+}
+
+// shift a space's orbit center to the right by a distance and update dependent objects
+void Space::shift_orbit_center_right(float distance) {
+
+    glm::vec3 new_orbit_center = m_orbit_center + glm::vec3(distance, 0.0f, 0.0f);
+
+    m_orbit_center = new_orbit_center; 
+    
+    for (auto obj : m_orbits) {
+        
+        // set all the spheres in this space to the new orbit center
+        if ( obj->get_type() == sphere_type ) {
+
+            Sphere * sphere = static_cast<Sphere *>(obj);
+            sphere->set_orbit_center(new_orbit_center);
+            
+        // because the orbit center of a space is what its objects rotate around
+        // we have to shift it over by the distance in its parent space
+        } else if ( obj->get_type() == space_type ) {
+            
+            Space * space = static_cast<Space *>(obj);
+            space->shift_orbit_center_right(distance + space->get_orbit_distance());
+        }
+    }
+}
+
+void Space::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
+    
+    for ( auto obj : get_orbits() ) {
+        
+        // cheating polymorphism, one enum at a time
+        if ( obj->get_type() == sphere_type ) {
+            Sphere * sphere = static_cast<Sphere *>(obj);
+            sphere->draw(view, projection, tick); 
+
+        } else if ( obj->get_type() == space_type ) {
+            Space * space = static_cast<Space *>(obj);
+            space->draw(view, projection, tick); 
+        }
+    }
+    
+}
+
+void Space::print() {
+    
+    std::cout << "Space: " << std::endl;
+
+    std::cout << "m_radius: " << m_radius << std::endl;
+    std::cout << "m_orbit_distance: " << m_orbit_distance << std::endl;
+    std::cout << "m_orbit_center: " << m_orbit_center.x << "," << m_orbit_center.y << "," << m_orbit_center.z << std::endl;
+    std::cout << "m_rotation_offset: " << m_rotation_offset << std::endl;
+
+    int sphere_count = 0;
+    int space_count = 0; 
+
+    for ( auto obj : get_orbits() ) {
+        
+        // cheating polymorphism, one enum at a time
+        if ( obj->get_type() == sphere_type ) {
+
+            Sphere * sphere = static_cast<Sphere *>(obj);
+            std::cout << "Sphere " << sphere_count << std::endl;
+            sphere->print();
+            sphere_count++;
+
+        } else if ( obj->get_type() == space_type ) {
+
+            Space * space = static_cast<Space *>(obj);
+            std::cout << "Sub-space " << space_count << std::endl;
+            space->print();
+            space_count++;
+        }
+    }
+    
 }
 
 Dot::Dot(glm::vec3 postion) :

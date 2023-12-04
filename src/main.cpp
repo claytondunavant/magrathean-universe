@@ -30,15 +30,7 @@ void display() {
         dot->draw(view, projection);
     }
     
-    for ( auto obj : Universe->get_orbits() ) {
-        
-        // cheating polymorphism, one enum at a time
-        if ( obj->get_type() == sphere_type ) {
-            Sphere * sphere = static_cast<Sphere *>(obj);
-            sphere->draw(view, projection, tick.get_tick()); 
-        }
-
-    }
+    Universe->draw(view, projection, tick.get_tick());
 
     glutSwapBuffers();
 }
@@ -102,25 +94,80 @@ void init(int argc, char** argv) {
     glDebugMessageCallback(debug_message_callback, nullptr);
 }
 
-void populate_universe(std::string string) {
-    
-    float distance = 0;
+struct string_to_space_state {
+    Space * space;
+    int index;
+};
 
-   for ( char c : string ) {
-       
+string_to_space_state string_to_space(std::string string, int index = 0, int depth = 0, glm::vec3 orbit_center = glm::vec3(0.0f, 0.0f, 0.0f), float orbit_distance = 0) {
+    
+    // when you create a space, its radius always starts as 0
+    Space * space = new Space(0, orbit_distance, orbit_center);
+    
+    char c;
+    
+    for ( ; index < string.size(); index++ ){
+        char c = string.at(index);
+        
         if ( c == 'S' ) {
-            Sphere * s = new Sphere(DEFAULT_RADIUS, Universe->get_radius(), glm::vec3(1.0f, 0.0f, 0.0f));
-            Universe->add_sphere(s);
+
+            float sphere_radius = DEFAULT_RADIUS;
+            
+            // the radius of a space is tight (assuming no padding)
+            // if this is the first sphere, put it in the center
+            float orbit_distance;
+            if ( space->get_radius() == 0 ) {
+                orbit_distance = 0;
+
+            // otherwise put it just on the outside 
+            } else {
+                orbit_distance = space->get_radius() + sphere_radius; 
+            }
+            
+            Sphere * s = new Sphere(sphere_radius, orbit_distance, orbit_center);
+            space->add_sphere(s);
+
+        } else if ( c == '(' ) {
+            
+            // create new space setting both the center and the distance to the current radius of the space
+            glm::vec3 sub_center = orbit_center + glm::vec3(space->get_radius(), 0.0f, 0.0f);
+            float orbit_distance = space->get_radius();
+            string_to_space_state state = string_to_space(string, index+1, ++depth, sub_center, orbit_distance);
+
+            Space * subspace = state.space;
+            
+            space->add_space(subspace);
+            
+            index = state.index;
+
+        } else if ( c == ')') {
+            
+            if ( depth == 0 )
+                continue;
+            
+            string_to_space_state state = {
+                space,
+                index
+            };
+
+            return state;
+
         } else {
             std::cout << "Incorrect Syntax!" << std::endl;
-            return;
         }
    }
+
+    string_to_space_state state = {
+        space,
+        index
+    };
+
+    return state;
 }
 
 int main(int argc, char** argv) {
     
-    std::string universe_string = "SSS";
+    std::string universe_string = "S(SS(SS))";
     
     // initialize all the things
     init(argc, argv);
@@ -130,8 +177,14 @@ int main(int argc, char** argv) {
     dots.push_back(new Dot(glm::vec3(1.0f, 0.0f, 0.0f))); // left & right
     dots.push_back(new Dot(glm::vec3(0.0f, 1.0f, 0.0f))); // up 
     dots.push_back(new Dot(glm::vec3(0.0f, 0.0f, 1.0f))); // towards & away from the screen
+                                                    
+    for ( float i = 0.0f; i < 1.0f; i += 0.1f ) {
+        dots.push_back(new Dot(glm::vec3(i, 0.0f, 0.0f))); // left & right
+    }
 
-    populate_universe(universe_string);
+    Universe = string_to_space(universe_string).space;
+    
+    Universe->print();
     
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     

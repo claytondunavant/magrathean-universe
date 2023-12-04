@@ -33,7 +33,8 @@ public:
     
     virtual universe_object_type get_type();
     float get_radius();
-    
+    float get_orbit_distance(); 
+
 protected:
     float m_radius;
     float m_orbit_distance;
@@ -55,7 +56,7 @@ protected:
     void add_vertex(float x, float y, float z);
     void add_indices(float i1, float i2, float i3);
     
-    float m_radius;
+    float m_render_radius;
     
     // rendering
     Shader shader;
@@ -71,20 +72,30 @@ public:
     Sphere(float radius, float orbit_distance, glm::vec3 orbit_center);
     
     universe_object_type get_type() override;
+    void set_orbit_center(glm::vec3 orbit_center);
 
     void draw(glm::mat4 view, glm::mat4 projection, unsigned int tick);
+    void print();
 };
 
 // Space consisting of orbiting spheres and sub-spaces
 class Space : public UniverseObject {
 public:
-   Space(float radius, float orbit_distance, glm::vec3 orbit_center);
+   Space(   float radius,               // radius of Space
+            float orbit_distance,       // distance of Space from Orbit Center
+            glm::vec3 orbit_center      // point Space orbits
+        );
 
     universe_object_type get_type() override;
    
    void add_sphere(Sphere * sphere);
+   void add_space(Space * space);
    std::vector<UniverseObject *> get_orbits();
+   void shift_orbit_center_right(float distance);
 
+    void draw(glm::mat4 view, glm::mat4 projection, unsigned int tick);
+    void print();
+    
 private:
     std::vector<UniverseObject *> m_orbits;
 };
