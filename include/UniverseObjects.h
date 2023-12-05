@@ -1,6 +1,7 @@
 //http://www.songho.ca/opengl/gl_sphere.html
 
 #include <GL/glew.h>
+
 #include "glm/detail/qualifier.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "glm/fwd.hpp"
@@ -26,15 +27,22 @@ enum universe_object_type {
 class UniverseObject 
 {
 public: 
-    UniverseObject(float radius, float orbit_distance);
+    UniverseObject(float radius, float orbit_distance, glm::vec3 orbit_center);
 
+    glm::mat4 rotate_around_orbit_center_matrix(unsigned int tick);
     int generate_rotation_offset();
     
     virtual universe_object_type get_type();
-    
+    float get_radius();
+    float get_orbit_distance(); 
+    glm::vec3 get_orbit_center();
+
+    virtual void set_orbit_center(glm::vec3 orbit_center);
+
 protected:
     float m_radius;
     float m_orbit_distance;
+    glm::vec3 m_orbit_center;
     int m_rotation_offset;
 };
 
@@ -45,6 +53,7 @@ public:
     RenderSphere(float radius, std::string vertex_shader_path, std::string fragment_shader_path);
     
     void build_vertices();
+
     std::vector<float> get_vertices();
     std::vector<unsigned int> get_indices();
 
@@ -52,7 +61,7 @@ protected:
     void add_vertex(float x, float y, float z, float u, float v);
     void add_indices(float i1, float i2, float i3);
     
-    float m_radius;
+    float m_render_radius;
     
     // rendering
     Shader shader;
@@ -67,19 +76,20 @@ protected:
 };
 
 // Sphere in an orbit
-class Sphere : public UniverseObject, RenderSphere
+class Sphere : public UniverseObject, public RenderSphere
 {
 public:
-    Sphere(float radius, float orbit_distance, std::string path_to_texture);
+    Sphere(float radius, float orbit_distance, glm::vec3 orbit_center, std::string path_to_texture);
+    
+    GLuint load_texture(const char* fileName);
+    void print();
     
     universe_object_type get_type() override;
-
-    GLuint load_texture(const char* fileName);
+    void set_orbit_center(glm::vec3 orbit_center) override;
 
     void draw(glm::mat4 view, glm::mat4 projection, unsigned int tick);
 
 private:
-
     GLuint texture_id;
     
 };
@@ -87,13 +97,27 @@ private:
 // Space consisting of orbiting spheres and sub-spaces
 class Space : public UniverseObject {
 public:
-   Space(float radius, float orbit_distance);
+    Space(  float radius,               // radius of Space
+            float orbit_distance,       // distance of Space from Orbit Center
+            glm::vec3 orbit_center      // point Space orbits
+    );
 
-    universe_object_type get_type() override;
-   
+   void draw(glm::mat4 view, glm::mat4 projection, unsigned int tick);
+   void populate_orbit_vectors_cache();
+   void print();
+
+   void shift_orbit_center_right(float distance);
+   void rotate_orbit_centers(unsigned int tick);
    void add_sphere(Sphere * sphere);
+   void add_space(Space * space);
+
+   universe_object_type get_type() override;
    std::vector<UniverseObject *> get_orbits();
 
+   void set_orbit_center(glm::vec3 orbit_center) override;
+
+   std::vector<glm::vec3> m_orbit_vectors_cache; // cache of vector from m_orbit_center to sub space orbit_centers
+    
 private:
     std::vector<UniverseObject *> m_orbits;
 };
