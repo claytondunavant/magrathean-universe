@@ -113,7 +113,7 @@ void populate_universe(std::string string) {
        
         if ( c == 'S' ) {
             // get random path to texture
-            path_to_texture = "../../../assets/textures/venus_surface.jpg";
+            path_to_texture = "../../../assets/textures/jupiter_texture.jpg";
             Sphere * s = new Sphere(DEFAULT_RADIUS, distance, path_to_texture);
             distance += distance_inc;
             Universe->add_sphere(s);

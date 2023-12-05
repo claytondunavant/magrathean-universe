@@ -62,6 +62,7 @@ protected:
 
     // texturing
     std::vector<float> texture_coordinates;
+    std::vector<float> interleavedData;
     
 };
 
@@ -80,6 +81,7 @@ public:
 private:
 
     GLuint texture_id;
+    
 };
 
 // Space consisting of orbiting spheres and sub-spaces
@@ -107,4 +109,5 @@ public:
 
 private:
     glm::vec3 m_position; 
+    
 };

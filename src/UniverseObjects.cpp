@@ -43,13 +43,18 @@ RenderSphere::RenderSphere(float radius, std::string vertex_shader_path, std::st
     glBindVertexArray(VAO); 
 
     // interleave data and buffer it
-    std::vector<float> interleavedData;
-    for (size_t i = 0; i < vertices.size(); i += 3) {
+    std::vector<float>().swap(interleavedData);
+
+    std::size_t i, j;
+    std::size_t count = vertices.size();
+    for (i = 0, j = 0; i < count; i += 3, j += 2)
+    {
         interleavedData.push_back(vertices[i]);
         interleavedData.push_back(vertices[i + 1]);
         interleavedData.push_back(vertices[i + 2]);
-        interleavedData.push_back(texture_coordinates[i / 3]);
-        interleavedData.push_back(texture_coordinates[i / 3 + 1]);
+
+        interleavedData.push_back(texture_coordinates[j]);
+        interleavedData.push_back(texture_coordinates[j + 1]);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -94,8 +99,11 @@ void RenderSphere::build_vertices()
             y = xy * sinf(sector_angle); // r * cos(u) * sin(v)
 
             // texture coordinates
-            u = static_cast<float>(j) / SECTOR_COUNT;
-            v = static_cast<float>(i) / STACK_COUNT;
+            // vertex tex coord (s, t) range between [0, 1]
+            u = (float)j / SECTOR_COUNT;
+            v = (float)i / STACK_COUNT;
+            std::cout << "u: " << u << " v: " << v << " x: " << x << " y: " << y << " z: " << z << std::endl;
+
 
             add_vertex(x, z, y, u, v);
         }
@@ -168,24 +176,33 @@ universe_object_type Sphere::get_type() {
 GLuint Sphere::load_texture(const char* fileName) {
     GLuint texture_id;
     glGenTextures(1, &texture_id);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     int width, height, channels;
-    stbi_set_flip_vertically_on_load(true); // Flip vertically because OpenGL textures are flipped
+    //stbi_set_flip_vertically_on_load(true); // Flip vertically because OpenGL textures are flipped
     unsigned char* data = stbi_load(fileName, &width, &height, &channels, 0);
 
     if (data)
     {
+        std::cout << "The image " << fileName << " loaded has size " << width << "x" << height << std::endl;
         GLenum format = (channels == 3) ? GL_RGB : GL_RGBA;
 
-        glBindTexture(GL_TEXTURE_2D, texture_id);
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
 
         // texture parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+ 
+        // When MAGnifying the image (no bigger mipmap available), use LINEAR filtering
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        // When MINifying the image, use a LINEAR blend of two mipmaps, each filtered LINEARLY too
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        // Generates mipmapping for better sampling.
+        glGenerateMipmap(GL_TEXTURE_2D);
+       
 
         glBindTexture(GL_TEXTURE_2D, 0);
 
