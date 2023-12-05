@@ -30,14 +30,13 @@ public:
     UniverseObject(float radius, float orbit_distance, glm::vec3 orbit_center);
 
     glm::mat4 rotate_around_orbit_center_matrix(unsigned int tick);
-
     int generate_rotation_offset();
     
     virtual universe_object_type get_type();
     float get_radius();
     float get_orbit_distance(); 
-    
     glm::vec3 get_orbit_center();
+
     virtual void set_orbit_center(glm::vec3 orbit_center);
 
 protected:
@@ -54,6 +53,7 @@ public:
     RenderSphere(float radius, std::string vertex_shader_path, std::string fragment_shader_path);
     
     void build_vertices();
+
     std::vector<float> get_vertices();
     std::vector<unsigned int> get_indices();
 
@@ -75,12 +75,12 @@ class Sphere : public UniverseObject, public RenderSphere
 {
 public:
     Sphere(float radius, float orbit_distance, glm::vec3 orbit_center);
-    
-    universe_object_type get_type() override;
-    void set_orbit_center(glm::vec3 orbit_center) override;
 
     void draw(glm::mat4 view, glm::mat4 projection, unsigned int tick);
     void print();
+    
+    universe_object_type get_type() override;
+    void set_orbit_center(glm::vec3 orbit_center) override;
 };
 
 // Space consisting of orbiting spheres and sub-spaces
@@ -91,21 +91,21 @@ public:
             glm::vec3 orbit_center      // point Space orbits
     );
 
-   universe_object_type get_type() override;
-   void set_orbit_center(glm::vec3 orbit_center) override;
-   
-   void add_sphere(Sphere * sphere);
-   void add_space(Space * space);
-   std::vector<UniverseObject *> get_orbits();
+   void draw(glm::mat4 view, glm::mat4 projection, unsigned int tick);
+   void populate_orbit_vectors_cache();
+   void print();
+
    void shift_orbit_center_right(float distance);
    void rotate_orbit_centers(unsigned int tick);
+   void add_sphere(Sphere * sphere);
+   void add_space(Space * space);
 
-    void draw(glm::mat4 view, glm::mat4 projection, unsigned int tick);
-    void print();
+   universe_object_type get_type() override;
+   std::vector<UniverseObject *> get_orbits();
 
-    void populate_orbit_vectors_cache();
+   void set_orbit_center(glm::vec3 orbit_center) override;
 
-    std::vector<glm::vec3> m_orbit_vectors_cache; // cache of vector from m_orbit_center to sub space orbit_centers
+   std::vector<glm::vec3> m_orbit_vectors_cache; // cache of vector from m_orbit_center to sub space orbit_centers
     
 private:
     std::vector<UniverseObject *> m_orbits;
