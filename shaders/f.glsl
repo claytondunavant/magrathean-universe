@@ -18,15 +18,12 @@ void main()
     vec3 normalTex = texture(normalTexture, TexCoord).xyz * 2.0 - 1.0;
     vec3 normal = normalize(TBN * normalTex);
 
-    // Use the normal for lighting calculation
-    //float brightness = max(dot(normal, normalize(vec3(1.0, 1.0, 1.0))), 0.0);
-    //vec3 lighting = vec3(brightness);
     // Set a constant brightness (adjust as needed)
     float brightness = 1.0;
 
-    // Combine color with lighting
+    // Combine color with constant brightness
     vec3 finalColor = color * brightness;
 
     FragColor = vec4(finalColor, 1.0);
-
+    
 } 

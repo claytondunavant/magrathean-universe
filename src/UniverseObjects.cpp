@@ -234,6 +234,10 @@ RenderSphere(radius, "../../../shaders/v.glsl", "../../../shaders/f.glsl")
 {
 
     texture_id = load_texture(path_to_texture.c_str(), false);
+    if (path_to_normal_map == "NA") {
+        // load default map
+
+    }
     normal_texture_id = load_texture(path_to_normal_map.c_str(), true);
 }
 
@@ -251,12 +255,12 @@ GLuint Sphere::load_texture(const char* fileName, bool isBumpMap) {
 
 
     int width, height, channels;
-    stbi_set_flip_vertically_on_load(true); // Flip vertically because OpenGL textures are flipped
+    //stbi_set_flip_vertically_on_load(true); // Flip vertically because OpenGL textures are flipped
     unsigned char* data = stbi_load(fileName, &width, &height, &channels, 0);
 
     if (data)
     {
-        //std::cout << "The image " << fileName << " loaded has size " << width << "x" << height << std::endl;
+        std::cout << "The image " << fileName << " loaded has size " << width << "x" << height << std::endl;
         GLenum format;
 
         if (isBumpMap) {

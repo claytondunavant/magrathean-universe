@@ -98,7 +98,7 @@ void init(int argc, char** argv) {
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
-std::string getRandomTexture() {
+int get_random_index() {
     // array of all possible textures
     std::vector<std::string> texturePaths = {
         "../../../assets/textures/earthmap.jpg",
@@ -122,7 +122,38 @@ std::string getRandomTexture() {
     int random_number = distribution(gen);
     std::cout << "random number: " << random_number << std::endl;
 
-    return texturePaths[random_number];
+    return random_number;
+}
+
+std::string get_texture(int index) {
+    std::vector<std::string> texturePaths = {
+        "../../../assets/textures/earthmap.jpg",
+        "../../../assets/textures/jupitermap.jpg",
+        "../../../assets/textures/mercurymap.jpg",
+        "../../../assets/textures/marsmap.jpg",
+        "../../../assets/textures/neptunemap.jpg",
+        "../../../assets/textures/plutomap.jpg",
+        "../../../assets/textures/saturnmap.jpg",
+        "../../../assets/textures/uranusmap.jpg",
+        "../../../assets/textures/venusmap.jpg"
+    };
+    return texturePaths[index];
+}
+
+std::string get_normal_map(int index) {
+    std::vector<std::string> bumpMapPaths = {
+        "../../../assets/normal_maps/earthbump.jpg",
+        "NA",
+        "../../../assets/normal_maps/mercurybump.jpg",
+        "../../../assets/normal_maps/marsbump.jpg",
+        "NA",
+        "../../../assets/normal_maps/plutobump.jpg",
+        "NA",
+        "NA",
+        "../../../assets/normal_maps/venusbump.jpg"
+    };
+
+    return bumpMapPaths[index];
 }
 
 struct string_to_space_state {
@@ -155,8 +186,9 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
                 orbit_distance = space->get_radius() + sphere_radius; 
             }
             
-            std::string path_to_texture = "../../../assets/textures/mercurymap.jpg";
-            std::string path_to_normal_map = "../../../assets/textures/mercurybump.jpg";
+            int random_index = get_random_index();
+            std::string path_to_texture = get_texture(random_index);
+            std::string path_to_normal_map = get_normal_map(random_index);
             Sphere * s = new Sphere(sphere_radius, orbit_distance, orbit_center, path_to_texture, path_to_normal_map);
             space->add_sphere(s);
             
