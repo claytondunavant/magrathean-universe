@@ -155,8 +155,9 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
                 orbit_distance = space->get_radius() + sphere_radius; 
             }
             
-            std::string path_to_texture = getRandomTexture();
-            Sphere * s = new Sphere(sphere_radius, orbit_distance, orbit_center, path_to_texture);
+            std::string path_to_texture = "../../../assets/textures/mercurymap.jpg";
+            std::string path_to_normal_map = "../../../assets/textures/mercurybump.jpg";
+            Sphere * s = new Sphere(sphere_radius, orbit_distance, orbit_center, path_to_texture, path_to_normal_map);
             space->add_sphere(s);
             
         } else if ( c == '(' ) {

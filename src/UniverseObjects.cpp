@@ -97,6 +97,14 @@ RenderSphere::RenderSphere(float radius, std::string vertex_shader_path, std::st
 
         interleavedData.push_back(texture_coordinates[j]);
         interleavedData.push_back(texture_coordinates[j + 1]);
+
+        interleavedData.push_back(normals[i]);
+        interleavedData.push_back(normals[i + 1]);
+        interleavedData.push_back(normals[i + 2]);
+
+        interleavedData.push_back(tangents[i]);
+        interleavedData.push_back(tangents[i + 1]);
+        interleavedData.push_back(tangents[i + 2]);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -106,11 +114,16 @@ RenderSphere::RenderSphere(float radius, std::string vertex_shader_path, std::st
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
     
     // set up vertex attributes
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(5 * sizeof(float)));
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(8 * sizeof(float)));
 
+    // enable vertex attribute arrays
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(3);
 }
 
 // TODO: fix up vector
@@ -145,7 +158,13 @@ void RenderSphere::build_vertices()
             u = static_cast<float>(j) / SECTOR_COUNT;
             v = static_cast<float>(i) / STACK_COUNT;
 
-            add_vertex(x, z, y, u, v);
+            // Calculate tangent and normal
+            glm::vec3 tangent, bitangent;
+            tangent = glm::vec3(-xy * sinf(sector_angle), xy * cosf(sector_angle), 0.0f);
+            bitangent = glm::cross(glm::vec3(x, y, z), tangent);
+            glm::vec3 normal = glm::normalize(glm::vec3(x, y, z));
+
+            add_vertex(x, z, y, u, v, normal, tangent);
         }
     }
     
@@ -184,13 +203,21 @@ std::vector<unsigned int> RenderSphere::get_indices() {
    return indices; 
 }
 
-void RenderSphere::add_vertex(float x, float y, float z, float u, float v) {
+void RenderSphere::add_vertex(float x, float y, float z, float u, float v, glm::vec3 normal, glm::vec3 tangent) {
     vertices.push_back(x);
     vertices.push_back(y);
     vertices.push_back(z);
 
     texture_coordinates.push_back(u);
     texture_coordinates.push_back(v);
+
+    normals.push_back(normal.x);
+    normals.push_back(normal.y);
+    normals.push_back(normal.z);
+
+    tangents.push_back(tangent.x);
+    tangents.push_back(tangent.y);
+    tangents.push_back(tangent.z);
 }
 
 void RenderSphere::add_indices(float i1, float i2, float i3) {
@@ -201,35 +228,44 @@ void RenderSphere::add_indices(float i1, float i2, float i3) {
 
 
 // this is insane and cool!
-Sphere::Sphere(float radius, float orbit_distance, glm::vec3 orbit_center, std::string path_to_texture) : 
+Sphere::Sphere(float radius, float orbit_distance, glm::vec3 orbit_center, std::string path_to_texture, std::string path_to_normal_map) : 
 UniverseObject(radius, orbit_distance, orbit_center),
 RenderSphere(radius, "../../../shaders/v.glsl", "../../../shaders/f.glsl")
 {
 
-    texture_id = load_texture(path_to_texture.c_str());
+    texture_id = load_texture(path_to_texture.c_str(), false);
+    normal_texture_id = load_texture(path_to_normal_map.c_str(), true);
 }
 
 universe_object_type Sphere::get_type() {
     return sphere_type;
 }
 
-GLuint Sphere::load_texture(const char* fileName) {
-    GLuint texture_id;
-    glGenTextures(1, &texture_id);
-    glBindTexture(GL_TEXTURE_2D, texture_id);
+GLuint Sphere::load_texture(const char* fileName, bool isBumpMap) {
+    GLuint local_texture_id;
+    glGenTextures(1, &local_texture_id);
+    glBindTexture(GL_TEXTURE_2D, local_texture_id);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 
     int width, height, channels;
-    //stbi_set_flip_vertically_on_load(true); // Flip vertically because OpenGL textures are flipped
+    stbi_set_flip_vertically_on_load(true); // Flip vertically because OpenGL textures are flipped
     unsigned char* data = stbi_load(fileName, &width, &height, &channels, 0);
 
     if (data)
     {
         //std::cout << "The image " << fileName << " loaded has size " << width << "x" << height << std::endl;
-        GLenum format = (channels == 3) ? GL_RGB : GL_RGBA;
+        GLenum format;
+
+        if (isBumpMap) {
+            format = GL_RED; // Grayscale format for bump map
+        }
+        else {
+            format = (channels == 3) ? GL_RGB : GL_RGBA;
+        }
+
 
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 
@@ -251,11 +287,11 @@ GLuint Sphere::load_texture(const char* fileName) {
     {
         std::cerr << "Failed to load texture at path: " << fileName << std::endl;
         stbi_image_free(data);
-        glDeleteTextures(1, &texture_id);
-        texture_id = 0;
+        glDeleteTextures(1, &local_texture_id);
+        local_texture_id = 0;
     }
 
-    return texture_id;
+    return local_texture_id;
 
 }
 
@@ -270,9 +306,12 @@ void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
     shader.setMat4("projection", projection);
 
     // Use the texture in your shader
-    shader.setInt("textureSampler", 0); // Set the texture unit
+    shader.setInt("colorTexture", 0); // Set the texture unit
+    shader.setInt("normalTexture", 1); // normal unit
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture_id);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, normal_texture_id);
 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0 );

@@ -61,7 +61,7 @@ public:
     std::vector<unsigned int> get_indices();
 
 protected:
-    void add_vertex(float x, float y, float z, float u, float v);
+    void add_vertex(float x, float y, float z, float u, float v, glm::vec3 normal, glm::vec3 tangent);
     void add_indices(float i1, float i2, float i3);
     
     float m_render_radius;
@@ -74,6 +74,8 @@ protected:
 
     // texturing
     std::vector<float> texture_coordinates;
+    std::vector<float> normals;
+    std::vector<float> tangents;
     std::vector<float> interleavedData;
     
 };
@@ -82,9 +84,9 @@ protected:
 class Sphere : public UniverseObject, public RenderSphere
 {
 public:
-    Sphere(float radius, float orbit_distance, glm::vec3 orbit_center, std::string path_to_texture);
+    Sphere(float radius, float orbit_distance, glm::vec3 orbit_center, std::string path_to_texture, std::string path_to_normal_map);
     
-    GLuint load_texture(const char* fileName);
+    GLuint load_texture(const char* fileName, bool isBump);
     void print();
     
     universe_object_type get_type() override;
@@ -94,6 +96,7 @@ public:
 
 private:
     GLuint texture_id;
+    GLuint normal_texture_id;
     
 };
 
