@@ -100,9 +100,14 @@ void RenderSphere::build_vertices()
 
             // texture coordinates
             // vertex tex coord (s, t) range between [0, 1]
-            u = (float)j / SECTOR_COUNT;
-            v = (float)i / STACK_COUNT;
-            std::cout << "u: " << u << " v: " << v << " x: " << x << " y: " << y << " z: " << z << std::endl;
+            u = static_cast<float>(j) / SECTOR_COUNT;
+            v = static_cast<float>(i) / STACK_COUNT;
+            // Reverse the v component for the bottom hemisphere
+ 
+            //v = 1.0f - v;
+            //u = 0.5f + (atan2(z, x) / 2 * PI);
+            //v = 0.5 + (asin(y) / PI);
+            //std::cout << "u: " << u << " v: " << v << " x: " << x << " y: " << y << " z: " << z << std::endl;
 
 
             add_vertex(x, z, y, u, v);
@@ -178,10 +183,9 @@ GLuint Sphere::load_texture(const char* fileName) {
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_2D, texture_id);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
 
     int width, height, channels;
     //stbi_set_flip_vertically_on_load(true); // Flip vertically because OpenGL textures are flipped

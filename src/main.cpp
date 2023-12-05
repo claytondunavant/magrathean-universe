@@ -103,17 +103,46 @@ void init(int argc, char** argv) {
     glDebugMessageCallback(debug_message_callback, nullptr);
 }
 
+std::string getRandomTexture() {
+    // array of all possible textures
+    std::vector<std::string> texturePaths = {
+        "../../../assets/textures/earthmap.jpg",
+        "../../../assets/textures/jupitermap.jpg",
+        "../../../assets/textures/mercurymap.jpg",
+        "../../../assets/textures/moonmap.jpg",
+        "../../../assets/textures/neptunemap.jpg",
+        "../../../assets/textures/plutomap.jpg",
+        "../../../assets/textures/saturnmap.jpg",
+        "../../../assets/textures/uranusmap.jpg",
+        "../../../assets/textures/venusmap.jpg"
+    };
+    // Use a random device to seed the random number generator
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    // Define the distribution for integers from 0 to 9
+    std::uniform_int_distribution<int> distribution(0, 8);
+
+    // Generate a random number
+    int random_number = distribution(gen);
+    std::cout << "random number: " << random_number << std::endl;
+
+    return texturePaths[random_number];
+}
+
 void populate_universe(std::string string) {
     
     float distance = 0;
     float distance_inc = 0.5f;
     std::string path_to_texture;
+    
 
    for ( char c : string ) {
        
         if ( c == 'S' ) {
             // get random path to texture
-            path_to_texture = "../../../assets/textures/jupiter_texture.jpg";
+
+            path_to_texture = getRandomTexture();
             Sphere * s = new Sphere(DEFAULT_RADIUS, distance, path_to_texture);
             distance += distance_inc;
             Universe->add_sphere(s);
