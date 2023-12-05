@@ -1,6 +1,6 @@
 #version 330 core
 
-smooth in vec2 TexCoord;
+in vec2 TexCoord;
 
 out vec4 FragColor;
 

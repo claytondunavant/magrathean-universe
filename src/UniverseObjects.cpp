@@ -1,11 +1,11 @@
 //http://www.songho.ca/opengl/gl_sphere.html
 
 #define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 #include "UniverseObjects.h"
 #include "glm/detail/qualifier.hpp"
 #include <vector>
-#include "stb_image.h"
 
 #include "UniverseObjects.h"
 

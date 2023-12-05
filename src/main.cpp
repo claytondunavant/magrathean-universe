@@ -99,7 +99,7 @@ std::string getRandomTexture() {
         "../../../assets/textures/earthmap.jpg",
         "../../../assets/textures/jupitermap.jpg",
         "../../../assets/textures/mercurymap.jpg",
-        "../../../assets/textures/moonmap.jpg",
+        "../../../assets/textures/marsmap.jpg",
         "../../../assets/textures/neptunemap.jpg",
         "../../../assets/textures/plutomap.jpg",
         "../../../assets/textures/saturnmap.jpg",
@@ -196,7 +196,7 @@ int main(int argc, char** argv) {
     
     // TODO: S(S(SS)(S)) the 1th subspace children collide
     // TODO: S(S(S))(S) does not have the 4th subspace
-    std::string universe_string = "S";
+    std::string universe_string = "S(S(S))";
     
     // initialize all the things
     init(argc, argv);
