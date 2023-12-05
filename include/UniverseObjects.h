@@ -29,11 +29,16 @@ class UniverseObject
 public: 
     UniverseObject(float radius, float orbit_distance, glm::vec3 orbit_center);
 
+    glm::mat4 rotate_around_orbit_center_matrix(unsigned int tick);
+
     int generate_rotation_offset();
     
     virtual universe_object_type get_type();
     float get_radius();
     float get_orbit_distance(); 
+    
+    glm::vec3 get_orbit_center();
+    virtual void set_orbit_center(glm::vec3 orbit_center);
 
 protected:
     float m_radius;
@@ -66,13 +71,13 @@ protected:
 };
 
 // Sphere in an orbit
-class Sphere : public UniverseObject, RenderSphere
+class Sphere : public UniverseObject, public RenderSphere
 {
 public:
     Sphere(float radius, float orbit_distance, glm::vec3 orbit_center);
     
     universe_object_type get_type() override;
-    void set_orbit_center(glm::vec3 orbit_center);
+    void set_orbit_center(glm::vec3 orbit_center) override;
 
     void draw(glm::mat4 view, glm::mat4 projection, unsigned int tick);
     void print();
@@ -81,20 +86,26 @@ public:
 // Space consisting of orbiting spheres and sub-spaces
 class Space : public UniverseObject {
 public:
-   Space(   float radius,               // radius of Space
+    Space(  float radius,               // radius of Space
             float orbit_distance,       // distance of Space from Orbit Center
             glm::vec3 orbit_center      // point Space orbits
-        );
+    );
 
-    universe_object_type get_type() override;
+   universe_object_type get_type() override;
+   void set_orbit_center(glm::vec3 orbit_center) override;
    
    void add_sphere(Sphere * sphere);
    void add_space(Space * space);
    std::vector<UniverseObject *> get_orbits();
    void shift_orbit_center_right(float distance);
+   void rotate_orbit_centers(unsigned int tick);
 
     void draw(glm::mat4 view, glm::mat4 projection, unsigned int tick);
     void print();
+
+    void populate_orbit_vectors_cache();
+
+    std::vector<glm::vec3> m_orbit_vectors_cache; // cache of vector from m_orbit_center to sub space orbit_centers
     
 private:
     std::vector<UniverseObject *> m_orbits;

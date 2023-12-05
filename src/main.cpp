@@ -8,7 +8,7 @@
 const unsigned int SCREEN_WIDTH = 800;
 const unsigned int SCREEN_HEIGHT = 800;
 
-Space * Universe = new Space(0, 0, glm::vec3(0.0f, 0.0f, 0.0f));
+Space * Universe = new Space(0, 0, UNIVERSE_ORIGIN);
 
 std::vector<Dot *> dots;
 
@@ -66,7 +66,6 @@ void timer( int value ) {
     glutTimerFunc(16, timer, 0);
 }
 
-
 void init(int argc, char** argv) {
     
     glutInit(&argc, argv);
@@ -99,7 +98,7 @@ struct string_to_space_state {
     int index;
 };
 
-string_to_space_state string_to_space(std::string string, int index = 0, int depth = 0, glm::vec3 orbit_center = glm::vec3(0.0f, 0.0f, 0.0f), float orbit_distance = 0) {
+string_to_space_state string_to_space(std::string string, int index = 0, int depth = 0, glm::vec3 orbit_center = UNIVERSE_ORIGIN, float orbit_distance = 0) {
     
     // when you create a space, its radius always starts as 0
     Space * space = new Space(0, orbit_distance, orbit_center);
@@ -126,7 +125,7 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
             
             Sphere * s = new Sphere(sphere_radius, orbit_distance, orbit_center);
             space->add_sphere(s);
-
+            
         } else if ( c == '(' ) {
             
             // create new space setting both the center and the distance to the current radius of the space
@@ -167,7 +166,9 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
 
 int main(int argc, char** argv) {
     
-    std::string universe_string = "S(SS(SS))";
+    // TODO: S(S(SS)(S)) the 1th subspace children collide
+    // TODO: S(S(S))(S) does not have the 4th subspace
+    std::string universe_string = "S(S(S))";
     
     // initialize all the things
     init(argc, argv);

@@ -11,6 +11,28 @@ UniverseObject::UniverseObject(float radius, float orbit_distance, glm::vec3 orb
     m_rotation_offset = generate_rotation_offset();
 }
 
+// it is increasing based on the tick
+// but shouldnt that not be the case becaues tick is only used in rotation which loops?
+// is this being called faster as time goes on?
+
+// apply to points already where they should be relative to origin? (makes sense in regards to sphere)
+glm::mat4 UniverseObject::rotate_around_orbit_center_matrix(unsigned int tick) {
+
+    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+    float current_angle = (tick * TICK_ROTATION_FACTOR) + m_rotation_offset;
+
+    // orbit center corrds matrix
+    glm::mat4 center_matrix = glm::translate(glm::mat4(1.0f), m_orbit_center);
+    // rotate current angle around the up axis
+    // why the heck is angle a rolling sum here and not when rotating center_points
+    glm::mat4 rotation_matrix = glm::rotate(glm::mat4(1.0f), current_angle, up);
+    // translate out the z by orbit distance    
+    glm::mat4 translation_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(m_orbit_distance, 0.0f, 0.0f));
+    
+    return center_matrix * rotation_matrix * translation_matrix;
+}
+
+
 int UniverseObject::generate_rotation_offset() {
     std::random_device rd;
     std::mt19937 gen(rd()); // Mersenne Twister engine
@@ -29,6 +51,15 @@ float UniverseObject::get_radius() {
 float UniverseObject::get_orbit_distance() {
     return m_orbit_distance;
 }
+
+glm::vec3 UniverseObject::get_orbit_center() {
+    return m_orbit_center; 
+}
+
+void UniverseObject::set_orbit_center(glm::vec3 orbit_center) {
+    m_orbit_center = orbit_center; 
+}
+
 
 RenderSphere::RenderSphere(float radius, std::string vertex_shader_path, std::string fragment_shader_path) {
     m_render_radius = radius; 
@@ -145,26 +176,12 @@ universe_object_type Sphere::get_type() {
     return sphere_type;
 }
 
-void Sphere::set_orbit_center(glm::vec3 orbit_center) {
-    m_orbit_center = orbit_center; 
-}
-
 
 void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
 
     shader.use(); 
     
-    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-    float current_angle = (tick * TICK_ROTATION_FACTOR) + m_rotation_offset;
-
-    // orbit center corrds matrix
-    glm::mat4 center_matrix = glm::translate(glm::mat4(1.0f), m_orbit_center);
-    // rotate current angle around the up axis
-    glm::mat4 rotation_matrix = glm::rotate(glm::mat4(1.0f), current_angle, up);
-    // translate out the z by orbit distance    
-    glm::mat4 translation_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(m_orbit_distance, 0.0f, 0.0f));
-
-    glm::mat4 model = center_matrix * rotation_matrix * translation_matrix;
+    glm::mat4 model = rotate_around_orbit_center_matrix(tick);
 
     shader.setMat4("model", model);
     shader.setMat4("view", view);
@@ -194,6 +211,10 @@ universe_object_type Space::get_type() {
     return space_type;
 }
 
+void Sphere::set_orbit_center(glm::vec3 orbit_center) {
+    m_orbit_center = orbit_center; 
+}
+
 // add a sphere to the space, update the radius and center point
 void Space::add_sphere(Sphere * sphere) {
     
@@ -213,7 +234,7 @@ void Space::add_sphere(Sphere * sphere) {
     m_radius += added_radius;
     
     // shift the orbit center if this is an oribiting space
-    if ( m_orbit_center != glm::vec3(0.0f, 0.0f, 0.0f) ) {
+    if ( m_orbit_center != UNIVERSE_ORIGIN ) {
         shift_orbit_center_right(added_radius);
     }
 }
@@ -232,7 +253,7 @@ void Space::add_space(Space * space) {
     
     m_radius += added_radius;
     
-    if ( m_orbit_center != glm::vec3(0.0f, 0.0f, 0.0f)) {
+    if ( m_orbit_center != UNIVERSE_ORIGIN) {
         shift_orbit_center_right(added_radius);
     }
 }
@@ -266,8 +287,86 @@ void Space::shift_orbit_center_right(float distance) {
     }
 }
 
+void Space::set_orbit_center(glm::vec3 orbit_center) {
+    m_orbit_center = orbit_center; 
+
+    for ( auto obj : m_orbits ) {
+        if ( obj->get_type() == sphere_type ) {
+
+            Sphere * sphere = static_cast<Sphere *>(obj);
+            sphere->set_orbit_center(orbit_center);
+        }
+    }
+}
+
+// populate cache of vectors from the orbit_center to the sub orb_center
+void Space::populate_orbit_vectors_cache() {
+    
+    for ( auto obj : m_orbits ) {
+        if ( obj->get_type() == space_type ) {
+            Space * subspace = static_cast<Space *>(obj);
+            
+            // push back
+            glm::vec3 orbit_center_vector = subspace->get_orbit_center() - get_orbit_center();
+            m_orbit_vectors_cache.push_back(orbit_center_vector);
+                
+            // recursively fill subspace caches
+            subspace->populate_orbit_vectors_cache();
+        }
+    }
+    
+}
+
+// rotate the orbit centers using the cached vectors
+void Space::rotate_orbit_centers(unsigned int tick) {
+    
+    // rotate the center points of subspaces around parent orbit_center
+    for ( auto obj : get_orbits() ) {
+        
+        if ( obj->get_type() == space_type ) {
+            Space * space = static_cast<Space *>(obj);
+            
+            // rotate current angle around the up axis
+            // why the heck is angle a constant angle here and not when rotating spheres
+            float angular_velocity = ORBIT_CENTER_ANGULAR_VELOCITY + (ORBIT_CENTER_ROTATION_OFFSET_FACTOR * m_rotation_offset);
+            glm::mat4 rotation_matrix = glm::rotate(glm::mat4(1.0f), angular_velocity, UP);
+            
+            // get the cached vector (maintains the length and angle)
+            // delete it from the front
+            glm::vec3 cached_orbit_center_vector = m_orbit_vectors_cache.front();
+            m_orbit_vectors_cache.erase(m_orbit_vectors_cache.begin());
+            
+            // vector from the parent orbit center to the child orbit center
+            glm::vec4 parent_oc_to_child_oc_vec = glm::vec4(cached_orbit_center_vector, 1.0f);
+            glm::vec4 temp = rotation_matrix * parent_oc_to_child_oc_vec;
+
+            // add rotated vector back to orbit center 
+            glm::vec3 new_sub_orbit_center = get_orbit_center() + glm::vec3(temp.x, temp.y, temp.z);
+            
+            // update spheres
+            space->set_orbit_center(new_sub_orbit_center);
+
+            // rotate the orbit centers of the subspace
+            space->rotate_orbit_centers(tick);
+        }
+    }
+    
+}
+
 void Space::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
     
+    // only rotate the orbits once per root draw call
+    if ( m_orbit_center == UNIVERSE_ORIGIN) {
+        
+        // fill the cache
+        populate_orbit_vectors_cache();
+        
+        // fill the orbit center vector cache of all the spaces
+        rotate_orbit_centers(tick);
+    }
+    
+    
+    // draw 
     for ( auto obj : get_orbits() ) {
         
         // cheating polymorphism, one enum at a time
