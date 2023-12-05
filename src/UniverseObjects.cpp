@@ -99,16 +99,9 @@ void RenderSphere::build_vertices()
             y = xy * sinf(sector_angle); // r * cos(u) * sin(v)
 
             // texture coordinates
-            // vertex tex coord (s, t) range between [0, 1]
+            // vertex tex coord (u, v) range between [0, 1]
             u = static_cast<float>(j) / SECTOR_COUNT;
             v = static_cast<float>(i) / STACK_COUNT;
-            // Reverse the v component for the bottom hemisphere
- 
-            //v = 1.0f - v;
-            //u = 0.5f + (atan2(z, x) / 2 * PI);
-            //v = 0.5 + (asin(y) / PI);
-            //std::cout << "u: " << u << " v: " << v << " x: " << x << " y: " << y << " z: " << z << std::endl;
-
 
             add_vertex(x, z, y, u, v);
         }
@@ -193,7 +186,7 @@ GLuint Sphere::load_texture(const char* fileName) {
 
     if (data)
     {
-        std::cout << "The image " << fileName << " loaded has size " << width << "x" << height << std::endl;
+        //std::cout << "The image " << fileName << " loaded has size " << width << "x" << height << std::endl;
         GLenum format = (channels == 3) ? GL_RGB : GL_RGBA;
 
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
