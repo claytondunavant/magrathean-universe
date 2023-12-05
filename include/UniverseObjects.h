@@ -1,5 +1,8 @@
 //http://www.songho.ca/opengl/gl_sphere.html
 
+#ifndef UNIVERSE_OBJECTS_H
+#define UNIVERSE_OBJECTS_H
+
 #include <GL/glew.h>
 
 #include "glm/detail/qualifier.hpp"
@@ -135,3 +138,5 @@ private:
     glm::vec3 m_position; 
     
 };
+
+#endif

@@ -120,12 +120,6 @@ std::string getRandomTexture() {
     return texturePaths[random_number];
 }
 
-void populate_universe(std::string string) {
-    
-    float distance = 0;
-    float distance_inc = 0.5f;
-    std::string path_to_texture;
-    
 struct string_to_space_state {
     Space * space;
     int index;
@@ -142,13 +136,7 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
         char c = string.at(index);
         
         if ( c == 'S' ) {
-            // get random path to texture
-
-            path_to_texture = getRandomTexture();
-            Sphere * s = new Sphere(DEFAULT_RADIUS, distance, path_to_texture);
-            distance += distance_inc;
-            Universe->add_sphere(s);
-
+            
             float sphere_radius = DEFAULT_RADIUS;
             
             // the radius of a space is tight (assuming no padding)
@@ -162,7 +150,8 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
                 orbit_distance = space->get_radius() + sphere_radius; 
             }
             
-            Sphere * s = new Sphere(sphere_radius, orbit_distance, orbit_center);
+            std::string path_to_texture = getRandomTexture();
+            Sphere * s = new Sphere(sphere_radius, orbit_distance, orbit_center, path_to_texture);
             space->add_sphere(s);
             
         } else if ( c == '(' ) {
@@ -207,7 +196,7 @@ int main(int argc, char** argv) {
     
     // TODO: S(S(SS)(S)) the 1th subspace children collide
     // TODO: S(S(S))(S) does not have the 4th subspace
-    std::string universe_string = "S(S(S))";
+    std::string universe_string = "S";
     
     // initialize all the things
     init(argc, argv);
