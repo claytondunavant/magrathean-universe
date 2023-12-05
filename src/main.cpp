@@ -80,6 +80,9 @@ void init(int argc, char** argv) {
     glutMotionFunc(processMotionFunc);
     glutMouseFunc(processMouseFunc);
     
+    // depth
+    glEnable(GL_DEPTH_TEST);
+    
     // init glew
     GLenum glew_status = glewInit();
     if ( glew_status != GLEW_OK ) {
@@ -91,6 +94,8 @@ void init(int argc, char** argv) {
     glEnable( GL_DEBUG_OUTPUT );
     glEnable( GL_DEBUG_OUTPUT_SYNCHRONOUS );
     glDebugMessageCallback(debug_message_callback, nullptr);
+    
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 std::string getRandomTexture() {
