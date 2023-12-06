@@ -4,6 +4,12 @@
 #include "util.h"
 #include "UniverseObjects.h"
 #include "Camera.h"
+#include "cfg.h"
+
+struct string_to_space_state {
+    Space * space;
+    int index;
+};
 
 const unsigned int SCREEN_WIDTH = 800;
 const unsigned int SCREEN_HEIGHT = 800;
@@ -124,10 +130,6 @@ std::string getRandomTexture() {
     return texturePaths[random_number];
 }
 
-struct string_to_space_state {
-    Space * space;
-    int index;
-};
 
 string_to_space_state string_to_space(std::string string, int index = 0, int depth = 0, glm::vec3 orbit_center = UNIVERSE_ORIGIN) {
     
@@ -200,7 +202,10 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
 
 int main(int argc, char** argv) {
     
-    std::string universe_string = "S(S(S))(S)";
+    // parse the config file to get the universe string
+    std::string config_file_path = "../../../universe.config";
+    std::string universe_string = parse_file(config_file_path);
+    //std::string universe_string = "S(SSS)(SS)";
     
     // initialize all the things
     init(argc, argv);
