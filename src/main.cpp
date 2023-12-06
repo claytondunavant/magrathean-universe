@@ -23,7 +23,7 @@ Tick tick;
 
 void display() {
     
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(43.0f/255.0f, 42.0f/255.0f, 76.0f/255.0f, 1.0f);
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     // tranformation
@@ -101,7 +101,7 @@ void init(int argc, char** argv) {
     glEnable( GL_DEBUG_OUTPUT_SYNCHRONOUS );
     glDebugMessageCallback(debug_message_callback, nullptr);
     
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 std::string getRandomTexture() {
@@ -224,11 +224,12 @@ int main(int argc, char** argv) {
     // parse the config file to get the universe string
     std::string config_file_path = "../../../universe.config";
     std::string universe_string = parse_file(config_file_path);
-    //std::string universe_string = "S(SSS)(SS)";
     
     // initialize all the things
     init(argc, argv);
     
+    /*
+    // Debug dots
     // prepare to render everything
     dots.push_back(new Dot(glm::vec3(0.0f, 0.0f, 0.0f))); // origin
     dots.push_back(new Dot(glm::vec3(1.0f, 0.0f, 0.0f))); // left & right
@@ -238,6 +239,7 @@ int main(int argc, char** argv) {
     for ( float i = 0.0f; i < 1.0f; i += 0.1f ) {
         dots.push_back(new Dot(glm::vec3(i, 0.0f, 0.0f))); // left & right
     }
+    */
 
     Universe = string_to_space(universe_string).space;
     

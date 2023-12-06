@@ -346,6 +346,11 @@ void Space::add_space(Space * space) {
     if ( m_orbit_center != UNIVERSE_ORIGIN) {
         shift_orbit_center_right(added_radius);
     }
+    
+    // orbit everything to attempt to stagger universes
+    for ( int i = 0; i < m_rotation_offset * ORBIT_CENTER_ROTATION_OFFSET_FACTOR; i++ ) {
+        rotate_orbit_centers();
+    }
 }
 
 std::vector<UniverseObject *> Space::get_orbits(){
@@ -408,17 +413,21 @@ void Space::populate_orbit_vectors_cache() {
 }
 
 // rotate the orbit centers using the cached vectors
-void Space::rotate_orbit_centers(unsigned int tick) {
+void Space::rotate_orbit_centers() {
+    
+    // fill the cache
+    populate_orbit_vectors_cache();
     
     // rotate the center points of subspaces around parent orbit_center
     for ( auto obj : get_orbits() ) {
-        
+
         if ( obj->get_type() == space_type ) {
+            
             Space * space = static_cast<Space *>(obj);
             
             // rotate current angle around the up axis
             // why the heck is angle a constant angle here and not when rotating spheres
-            float angular_velocity = ORBIT_CENTER_ANGULAR_VELOCITY + (ORBIT_CENTER_ROTATION_OFFSET_FACTOR * m_rotation_offset);
+            float angular_velocity = ORBIT_CENTER_ANGULAR_VELOCITY;
             glm::mat4 rotation_matrix = glm::rotate(glm::mat4(1.0f), angular_velocity, UP);
             
             // get the cached vector (maintains the length and angle)
@@ -437,7 +446,7 @@ void Space::rotate_orbit_centers(unsigned int tick) {
             space->set_orbit_center(new_sub_orbit_center);
 
             // rotate the orbit centers of the subspace
-            space->rotate_orbit_centers(tick);
+            space->rotate_orbit_centers();
         }
     }
     
@@ -448,11 +457,8 @@ void Space::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
     // only rotate the orbits once per root draw call
     if ( m_orbit_center == UNIVERSE_ORIGIN) {
         
-        // fill the cache
-        populate_orbit_vectors_cache();
-        
         // fill the orbit center vector cache of all the spaces
-        rotate_orbit_centers(tick);
+        rotate_orbit_centers();
     }
     
     

@@ -110,7 +110,7 @@ public:
    void print();
 
    void shift_orbit_center_right(float distance);
-   void rotate_orbit_centers(unsigned int tick);
+   void rotate_orbit_centers();
    void add_sphere(Sphere * sphere);
    void add_space(Space * space);
 
