@@ -201,12 +201,12 @@ void RenderSphere::add_indices(float i1, float i2, float i3) {
 
 
 // this is insane and cool!
-Sphere::Sphere(float radius, float orbit_distance, glm::vec3 orbit_center, std::string path_to_texture) : 
+Sphere::Sphere(float radius, float orbit_distance, glm::vec3 orbit_center, std::string path_to_texture, bool is_illuminated = false) : 
 UniverseObject(radius, orbit_distance, orbit_center),
 RenderSphere(radius, "../../../shaders/v.glsl", "../../../shaders/f.glsl")
 {
-
     texture_id = load_texture(path_to_texture.c_str());
+    m_is_illuminated = is_illuminated;
 }
 
 universe_object_type Sphere::get_type() {
@@ -291,6 +291,7 @@ void Sphere::print() {
     std::cout << "m_orbit_distance: " << m_orbit_distance << std::endl;
     std::cout << "m_orbit_center: " << m_orbit_center.x << "," << m_orbit_center.y << "," << m_orbit_center.z << std::endl;
     std::cout << "m_rotation_offset: " << m_rotation_offset << std::endl;
+    std::cout << "m_is_illuminated: " << m_is_illuminated << std::endl;
 }
 
 Space::Space(float radius, float orbit_distance, glm::vec3 orbit_center) :

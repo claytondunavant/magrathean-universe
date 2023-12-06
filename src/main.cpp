@@ -139,6 +139,9 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
     // modifications to sphere radius is local to the space its in
     float sphere_radius = DEFAULT_RADIUS;
     
+    // toggling illuminated spheres is local to the space its in
+    bool spheres_are_illuminated = false;
+    
     char c;
     
     for ( ; index < string.size(); index++ ){
@@ -157,8 +160,15 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
                 orbit_distance = space->get_radius() + sphere_radius; 
             }
             
-            std::string path_to_texture = getRandomTexture();
-            Sphere * s = new Sphere(sphere_radius, orbit_distance, orbit_center, path_to_texture);
+            // if illuminated sphere, use sun texture
+            std::string path_to_texture;
+            if (spheres_are_illuminated) {
+                path_to_texture = "../../../assets/textures/venusmap.jpg";
+            } else {
+                path_to_texture = getRandomTexture();
+            }
+            
+            Sphere * s = new Sphere(sphere_radius, orbit_distance, orbit_center, path_to_texture, spheres_are_illuminated);
             
             // this will update the space's radius
             space->add_sphere(s);
@@ -192,6 +202,10 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
             sphere_radius *= 1.0f + SPHERE_RADIUS_MODIFICATION_FACTOR;
         } else if ( c == SPHERE_RADIUS_DECREASE_TOKEN ) {
             sphere_radius *= SPHERE_RADIUS_MODIFICATION_FACTOR;
+        } else if ( c == ILLUMINATED_SPHERE_OPEN_TOKEN ) {
+            spheres_are_illuminated = true;
+        } else if ( c == ILLUMINATED_SPHERE_CLOSE_TOKEN ) {
+            spheres_are_illuminated = false;
         } else {
             std::cout << "Incorrect Syntax!" << std::endl;
         }
@@ -228,7 +242,7 @@ int main(int argc, char** argv) {
     Universe = string_to_space(universe_string).space;
     
     //Universe->print();
-    
+   
     // call the main loop
     glutMainLoop();
 }
