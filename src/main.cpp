@@ -120,7 +120,6 @@ std::string getRandomTexture() {
 
     // Generate a random number
     int random_number = distribution(gen);
-    std::cout << "random number: " << random_number << std::endl;
 
     return texturePaths[random_number];
 }
@@ -130,10 +129,10 @@ struct string_to_space_state {
     int index;
 };
 
-string_to_space_state string_to_space(std::string string, int index = 0, int depth = 0, glm::vec3 orbit_center = UNIVERSE_ORIGIN, float orbit_distance = 0) {
+string_to_space_state string_to_space(std::string string, int index = 0, int depth = 0, glm::vec3 orbit_center = UNIVERSE_ORIGIN) {
     
     // when you create a space, its radius always starts as 0
-    Space * space = new Space(0, orbit_distance, orbit_center);
+    Space * space = new Space(0, 0, orbit_center);
     
     char c;
     
@@ -157,14 +156,16 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
             
             std::string path_to_texture = getRandomTexture();
             Sphere * s = new Sphere(sphere_radius, orbit_distance, orbit_center, path_to_texture);
+            
+            // this will update the space's radius
             space->add_sphere(s);
             
         } else if ( c == '(' ) {
             
+            // radius of space should be tight bounding
             // create new space setting both the center and the distance to the current radius of the space
-            glm::vec3 sub_center = orbit_center + glm::vec3(space->get_radius(), 0.0f, 0.0f);
-            float orbit_distance = space->get_radius();
-            string_to_space_state state = string_to_space(string, index+1, ++depth, sub_center, orbit_distance);
+            glm::vec3 sub_center = space->get_orbit_center() + glm::vec3(space->get_radius(), 0.0f, 0.0f);
+            string_to_space_state state = string_to_space(string, index+1, ++depth, sub_center);
 
             Space * subspace = state.space;
             
@@ -199,9 +200,7 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
 
 int main(int argc, char** argv) {
     
-    // TODO: S(S(SS)(S)) the 1th subspace children collide
-    // TODO: S(S(S))(S) does not have the 4th subspace
-    std::string universe_string = "S(S(S))";
+    std::string universe_string = "S(S(S))(S)";
     
     // initialize all the things
     init(argc, argv);
@@ -218,9 +217,7 @@ int main(int argc, char** argv) {
 
     Universe = string_to_space(universe_string).space;
     
-    Universe->print();
-    
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //Universe->print();
     
     // call the main loop
     glutMainLoop();

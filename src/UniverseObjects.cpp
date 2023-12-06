@@ -307,7 +307,6 @@ void Sphere::set_orbit_center(glm::vec3 orbit_center) {
 
 // add a sphere to the space, update the radius and center point
 void Space::add_sphere(Sphere * sphere) {
-    
     // add sphere to orbits
     m_orbits.push_back(sphere);
     
@@ -354,7 +353,7 @@ std::vector<UniverseObject *> Space::get_orbits(){
 
 // shift a space's orbit center to the right by a distance and update dependent objects
 void Space::shift_orbit_center_right(float distance) {
-
+    
     glm::vec3 new_orbit_center = m_orbit_center + glm::vec3(distance, 0.0f, 0.0f);
 
     m_orbit_center = new_orbit_center; 
@@ -372,7 +371,7 @@ void Space::shift_orbit_center_right(float distance) {
         } else if ( obj->get_type() == space_type ) {
             
             Space * space = static_cast<Space *>(obj);
-            space->shift_orbit_center_right(distance + space->get_orbit_distance());
+            space->shift_orbit_center_right(distance);
         }
     }
 }
