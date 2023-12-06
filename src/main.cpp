@@ -135,15 +135,16 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
     
     // when you create a space, its radius always starts as 0
     Space * space = new Space(0, 0, orbit_center);
+
+    // modifications to sphere radius is local to the space its in
+    float sphere_radius = DEFAULT_RADIUS;
     
     char c;
     
     for ( ; index < string.size(); index++ ){
         char c = string.at(index);
         
-        if ( c == 'S' ) {
-            
-            float sphere_radius = DEFAULT_RADIUS;
+        if ( c == SPHERE_TOKEN ) {
             
             // the radius of a space is tight (assuming no padding)
             // if this is the first sphere, put it in the center
@@ -162,7 +163,7 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
             // this will update the space's radius
             space->add_sphere(s);
             
-        } else if ( c == '(' ) {
+        } else if ( c == SUB_SPACE_OPEN_TOKEN ) {
             
             // radius of space should be tight bounding
             // create new space setting both the center and the distance to the current radius of the space
@@ -175,7 +176,7 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
             
             index = state.index;
 
-        } else if ( c == ')') {
+        } else if ( c == SUB_SPACE_CLOSE_TOKEN) {
             
             if ( depth == 0 )
                 continue;
@@ -187,6 +188,10 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
 
             return state;
 
+        } else if ( c == SPHERE_RADIUS_INCREASE_TOKEN ) {
+            sphere_radius *= 1.0f + SPHERE_RADIUS_MODIFICATION_FACTOR;
+        } else if ( c == SPHERE_RADIUS_DECREASE_TOKEN ) {
+            sphere_radius *= SPHERE_RADIUS_MODIFICATION_FACTOR;
         } else {
             std::cout << "Incorrect Syntax!" << std::endl;
         }
