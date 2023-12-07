@@ -52,6 +52,15 @@ void processKeyboardFunc(unsigned char key, int x, int y) {
             sub_space_movement_toggle = 1.0f;
         }
     }
+
+    if ((unsigned int)key == 9) {
+        if (shadow_toggle == 1.0f) {
+			shadow_toggle = 0.0f;
+        }
+        else {
+			shadow_toggle = 1.0f;
+		}
+    }
     
     switch (key) {
         case 'w':

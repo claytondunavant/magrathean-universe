@@ -28,6 +28,7 @@ enum universe_object_type {
 
 extern float sphere_movement_toggle;
 extern float sub_space_movement_toggle;
+extern float shadow_toggle;
                          
 // An object in the universe
 class UniverseObject 

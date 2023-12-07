@@ -13,6 +13,7 @@
 
 float sphere_movement_toggle = 1.0f;
 float sub_space_movement_toggle = 1.0f;
+float shadow_toggle = 1.0f;
 
 UniverseObject::UniverseObject(float radius, float orbit_distance, glm::vec3 orbit_center){
     m_radius = radius;
@@ -315,7 +316,7 @@ void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick, glm::
 
     
     glUniform1i(glGetUniformLocation(shader.ID, "isLuminous"), m_is_illuminated);
-    glUniform1i(glGetUniformLocation(shader.ID, "useShadows"), true);
+    glUniform1i(glGetUniformLocation(shader.ID, "useShadows"), shadow_toggle);
     glUniform3f(glGetUniformLocation(shader.ID, "luminousSpherePos"), sun_location.x, sun_location.y, sun_location.z);
 
 
