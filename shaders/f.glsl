@@ -43,7 +43,7 @@ void main()
     } else {
         // Shadow mapping logic
         // Calculate the vector from the fragment to the luminous sphere
-        vec3 lightDir = normalize(vec3(fView * vec4(luminousSpherePos, 1.0)) - FragPos);
+        vec3 lightDir = normalize(vec3(fView * vec4(luminousSpherePos, 1.0))) - FragPos;
         //lightDir = normalize(vec3(fView * vec4(luminousSpherePos, 0.0)));
 
         // Calculate Lambertian diffuse reflection
