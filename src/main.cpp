@@ -42,6 +42,17 @@ void display() {
 }
 
 void processKeyboardFunc(unsigned char key, int x, int y) {
+    
+    if ( (unsigned int)key == 32 ) {
+        if (sphere_movement_toggle == 1.0f) {
+            sphere_movement_toggle = 0.0f;
+            sub_space_movement_toggle = 0.0f;
+        } else {
+            sphere_movement_toggle = 1.0f;
+            sub_space_movement_toggle = 1.0f;
+        }
+    }
+    
     switch (key) {
         case 'w':
             camera.move_forward();
