@@ -16,7 +16,7 @@ uniform int isLuminous;
 // Define the position of the luminous sphere
 uniform vec3 luminousSpherePos;
 
-uniform int orbitDistance;
+uniform int useShadows;
 
 void main()
 {
@@ -41,17 +41,19 @@ void main()
         brightness += diff;
 
     } else {
-        // Shadow mapping logic
-        // Calculate the vector from the fragment to the luminous sphere
-        vec3 lightDir = normalize(vec3(fView * vec4(luminousSpherePos, 1.0))) - FragPos;
-        //lightDir = normalize(vec3(fView * vec4(luminousSpherePos, 0.0)));
+        if (useShadows == 1) {
 
-        // Calculate Lambertian diffuse reflection
-        float diff = max(dot(normal, lightDir), 0.0);
-        brightness -= diff;
+            // Shadow mapping logic
+            // Calculate the vector from the fragment to the luminous sphere
+            vec3 lightDir = normalize(vec3(fView * vec4(luminousSpherePos, 1.0))) - FragPos;
+            //lightDir = normalize(vec3(fView * vec4(luminousSpherePos, 0.0)));
 
-
-
+            // Calculate Lambertian diffuse reflection
+            float diff = max(dot(normal, lightDir), 0.0);
+            brightness -= diff;
+        } else {
+            brightness = 1.0;
+        }
 
     }
 

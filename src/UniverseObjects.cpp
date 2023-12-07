@@ -312,7 +312,7 @@ void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick, glm::
 
     
     glUniform1i(glGetUniformLocation(shader.ID, "isLuminous"), m_is_illuminated);
-    glUniform1i(glGetUniformLocation(shader.ID, "orbitDistance"), m_orbit_distance);
+    glUniform1i(glGetUniformLocation(shader.ID, "useShadows"), true);
     glUniform3f(glGetUniformLocation(shader.ID, "luminousSpherePos"), sun_location.x, sun_location.y, sun_location.z);
 
 
