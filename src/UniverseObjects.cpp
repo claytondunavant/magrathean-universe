@@ -228,17 +228,14 @@ void RenderSphere::add_indices(float i1, float i2, float i3) {
 
 
 // this is insane and cool!
-Sphere::Sphere(float radius, float orbit_distance, glm::vec3 orbit_center, std::string path_to_texture, std::string path_to_normal_map) : 
-UniverseObject(radius, orbit_distance, orbit_center),
-RenderSphere(radius, "../../../shaders/v.glsl", "../../../shaders/f.glsl")
+
+Sphere::Sphere(float radius, float orbit_distance, glm::vec3 orbit_center, std::string path_to_texture, std::string path_to_normal_map, bool is_illuminated = false) :
+    UniverseObject(radius, orbit_distance, orbit_center),
+    RenderSphere(radius, "../../../shaders/v.glsl", "../../../shaders/f.glsl")
 {
-
     texture_id = load_texture(path_to_texture.c_str(), false);
-    if (path_to_normal_map == "NA") {
-        // load default map
-
-    }
     normal_texture_id = load_texture(path_to_normal_map.c_str(), true);
+    m_is_illuminated = is_illuminated;
 }
 
 universe_object_type Sphere::get_type() {
@@ -334,6 +331,7 @@ void Sphere::print() {
     std::cout << "m_orbit_distance: " << m_orbit_distance << std::endl;
     std::cout << "m_orbit_center: " << m_orbit_center.x << "," << m_orbit_center.y << "," << m_orbit_center.z << std::endl;
     std::cout << "m_rotation_offset: " << m_rotation_offset << std::endl;
+    std::cout << "m_is_illuminated: " << m_is_illuminated << std::endl;
 }
 
 Space::Space(float radius, float orbit_distance, glm::vec3 orbit_center) :
@@ -350,7 +348,6 @@ void Sphere::set_orbit_center(glm::vec3 orbit_center) {
 
 // add a sphere to the space, update the radius and center point
 void Space::add_sphere(Sphere * sphere) {
-    
     // add sphere to orbits
     m_orbits.push_back(sphere);
     
@@ -389,6 +386,11 @@ void Space::add_space(Space * space) {
     if ( m_orbit_center != UNIVERSE_ORIGIN) {
         shift_orbit_center_right(added_radius);
     }
+    
+    // orbit everything to attempt to stagger universes
+    for ( int i = 0; i < m_rotation_offset * ORBIT_CENTER_ROTATION_OFFSET_FACTOR; i++ ) {
+        rotate_orbit_centers();
+    }
 }
 
 std::vector<UniverseObject *> Space::get_orbits(){
@@ -397,7 +399,7 @@ std::vector<UniverseObject *> Space::get_orbits(){
 
 // shift a space's orbit center to the right by a distance and update dependent objects
 void Space::shift_orbit_center_right(float distance) {
-
+    
     glm::vec3 new_orbit_center = m_orbit_center + glm::vec3(distance, 0.0f, 0.0f);
 
     m_orbit_center = new_orbit_center; 
@@ -415,7 +417,7 @@ void Space::shift_orbit_center_right(float distance) {
         } else if ( obj->get_type() == space_type ) {
             
             Space * space = static_cast<Space *>(obj);
-            space->shift_orbit_center_right(distance + space->get_orbit_distance());
+            space->shift_orbit_center_right(distance);
         }
     }
 }
@@ -451,17 +453,21 @@ void Space::populate_orbit_vectors_cache() {
 }
 
 // rotate the orbit centers using the cached vectors
-void Space::rotate_orbit_centers(unsigned int tick) {
+void Space::rotate_orbit_centers() {
+    
+    // fill the cache
+    populate_orbit_vectors_cache();
     
     // rotate the center points of subspaces around parent orbit_center
     for ( auto obj : get_orbits() ) {
-        
+
         if ( obj->get_type() == space_type ) {
+            
             Space * space = static_cast<Space *>(obj);
             
             // rotate current angle around the up axis
             // why the heck is angle a constant angle here and not when rotating spheres
-            float angular_velocity = ORBIT_CENTER_ANGULAR_VELOCITY + (ORBIT_CENTER_ROTATION_OFFSET_FACTOR * m_rotation_offset);
+            float angular_velocity = ORBIT_CENTER_ANGULAR_VELOCITY;
             glm::mat4 rotation_matrix = glm::rotate(glm::mat4(1.0f), angular_velocity, UP);
             
             // get the cached vector (maintains the length and angle)
@@ -480,7 +486,7 @@ void Space::rotate_orbit_centers(unsigned int tick) {
             space->set_orbit_center(new_sub_orbit_center);
 
             // rotate the orbit centers of the subspace
-            space->rotate_orbit_centers(tick);
+            space->rotate_orbit_centers();
         }
     }
     
@@ -491,11 +497,8 @@ void Space::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
     // only rotate the orbits once per root draw call
     if ( m_orbit_center == UNIVERSE_ORIGIN) {
         
-        // fill the cache
-        populate_orbit_vectors_cache();
-        
         // fill the orbit center vector cache of all the spaces
-        rotate_orbit_centers(tick);
+        rotate_orbit_centers();
     }
     
     

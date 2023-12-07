@@ -84,7 +84,7 @@ protected:
 class Sphere : public UniverseObject, public RenderSphere
 {
 public:
-    Sphere(float radius, float orbit_distance, glm::vec3 orbit_center, std::string path_to_texture, std::string path_to_normal_map);
+    Sphere(float radius, float orbit_distance, glm::vec3 orbit_center, std::string path_to_texture, std::string path_to_normal_map, bool is_illuminated);
     
     GLuint load_texture(const char* fileName, bool isBump);
     void print();
@@ -97,7 +97,7 @@ public:
 private:
     GLuint texture_id;
     GLuint normal_texture_id;
-    
+    bool m_is_illuminated;
 };
 
 // Space consisting of orbiting spheres and sub-spaces
@@ -113,7 +113,7 @@ public:
    void print();
 
    void shift_orbit_center_right(float distance);
-   void rotate_orbit_centers(unsigned int tick);
+   void rotate_orbit_centers();
    void add_sphere(Sphere * sphere);
    void add_space(Space * space);
 

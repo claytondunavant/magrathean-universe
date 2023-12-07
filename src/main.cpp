@@ -4,6 +4,12 @@
 #include "util.h"
 #include "UniverseObjects.h"
 #include "Camera.h"
+#include "cfg.h"
+
+struct string_to_space_state {
+    Space * space;
+    int index;
+};
 
 const unsigned int SCREEN_WIDTH = 800;
 const unsigned int SCREEN_HEIGHT = 800;
@@ -17,7 +23,7 @@ Tick tick;
 
 void display() {
     
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(43.0f/255.0f, 42.0f/255.0f, 76.0f/255.0f, 1.0f);
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     // tranformation
@@ -120,7 +126,6 @@ int get_random_index() {
 
     // Generate a random number
     int random_number = distribution(gen);
-    std::cout << "random number: " << random_number << std::endl;
 
     return random_number;
 }
@@ -156,24 +161,24 @@ std::string get_normal_map(int index) {
     return bumpMapPaths[index];
 }
 
-struct string_to_space_state {
-    Space * space;
-    int index;
-};
 
-string_to_space_state string_to_space(std::string string, int index = 0, int depth = 0, glm::vec3 orbit_center = UNIVERSE_ORIGIN, float orbit_distance = 0) {
+string_to_space_state string_to_space(std::string string, int index = 0, int depth = 0, glm::vec3 orbit_center = UNIVERSE_ORIGIN) {
     
     // when you create a space, its radius always starts as 0
-    Space * space = new Space(0, orbit_distance, orbit_center);
+    Space * space = new Space(0, 0, orbit_center);
+
+    // modifications to sphere radius is local to the space its in
+    float sphere_radius = DEFAULT_RADIUS;
+    
+    // toggling illuminated spheres is local to the space its in
+    bool spheres_are_illuminated = false;
     
     char c;
     
     for ( ; index < string.size(); index++ ){
         char c = string.at(index);
         
-        if ( c == 'S' ) {
-            
-            float sphere_radius = DEFAULT_RADIUS;
+        if ( c == SPHERE_TOKEN ) {
             
             // the radius of a space is tight (assuming no padding)
             // if this is the first sphere, put it in the center
@@ -186,18 +191,29 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
                 orbit_distance = space->get_radius() + sphere_radius; 
             }
             
-            int random_index = get_random_index();
-            std::string path_to_texture = get_texture(random_index);
-            std::string path_to_normal_map = get_normal_map(random_index);
-            Sphere * s = new Sphere(sphere_radius, orbit_distance, orbit_center, path_to_texture, path_to_normal_map);
+            // if illuminated sphere, use sun texture
+            std::string path_to_texture;
+            std::string path_to_normal_map;
+            if (spheres_are_illuminated) {
+                path_to_texture = "../../../assets/textures/sunmap2.0.jpg";
+                path_to_normal_map = "NA";
+            } else {
+                int random_index = get_random_index();
+                path_to_texture = get_texture(random_index);
+                path_to_normal_map = get_normal_map(random_index);
+            }
+            
+            Sphere * s = new Sphere(sphere_radius, orbit_distance, orbit_center, path_to_texture, path_to_normal_map, spheres_are_illuminated);
+            
+            // this will update the space's radius
             space->add_sphere(s);
             
-        } else if ( c == '(' ) {
+        } else if ( c == SUB_SPACE_OPEN_TOKEN ) {
             
+            // radius of space should be tight bounding
             // create new space setting both the center and the distance to the current radius of the space
-            glm::vec3 sub_center = orbit_center + glm::vec3(space->get_radius(), 0.0f, 0.0f);
-            float orbit_distance = space->get_radius();
-            string_to_space_state state = string_to_space(string, index+1, ++depth, sub_center, orbit_distance);
+            glm::vec3 sub_center = space->get_orbit_center() + glm::vec3(space->get_radius(), 0.0f, 0.0f);
+            string_to_space_state state = string_to_space(string, index+1, ++depth, sub_center);
 
             Space * subspace = state.space;
             
@@ -205,7 +221,7 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
             
             index = state.index;
 
-        } else if ( c == ')') {
+        } else if ( c == SUB_SPACE_CLOSE_TOKEN) {
             
             if ( depth == 0 )
                 continue;
@@ -217,6 +233,14 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
 
             return state;
 
+        } else if ( c == SPHERE_RADIUS_INCREASE_TOKEN ) {
+            sphere_radius *= 1.0f + SPHERE_RADIUS_MODIFICATION_FACTOR;
+        } else if ( c == SPHERE_RADIUS_DECREASE_TOKEN ) {
+            sphere_radius *= SPHERE_RADIUS_MODIFICATION_FACTOR;
+        } else if ( c == ILLUMINATED_SPHERE_OPEN_TOKEN ) {
+            spheres_are_illuminated = true;
+        } else if ( c == ILLUMINATED_SPHERE_CLOSE_TOKEN ) {
+            spheres_are_illuminated = false;
         } else {
             std::cout << "Incorrect Syntax!" << std::endl;
         }
@@ -232,13 +256,15 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
 
 int main(int argc, char** argv) {
     
-    // TODO: S(S(SS)(S)) the 1th subspace children collide
-    // TODO: S(S(S))(S) does not have the 4th subspace
-    std::string universe_string = "S(S(S))";
+    // parse the config file to get the universe string
+    std::string config_file_path = "../../../universe.config";
+    std::string universe_string = parse_file(config_file_path);
     
     // initialize all the things
     init(argc, argv);
     
+    /*
+    // Debug dots
     // prepare to render everything
     dots.push_back(new Dot(glm::vec3(0.0f, 0.0f, 0.0f))); // origin
     dots.push_back(new Dot(glm::vec3(1.0f, 0.0f, 0.0f))); // left & right
@@ -248,13 +274,12 @@ int main(int argc, char** argv) {
     for ( float i = 0.0f; i < 1.0f; i += 0.1f ) {
         dots.push_back(new Dot(glm::vec3(i, 0.0f, 0.0f))); // left & right
     }
+    */
 
     Universe = string_to_space(universe_string).space;
     
-    Universe->print();
-    
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    
+    //Universe->print();
+   
     // call the main loop
     glutMainLoop();
 }
