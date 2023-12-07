@@ -197,8 +197,11 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
             if (spheres_are_illuminated) {
                 path_to_texture = "../../../assets/textures/sunmap2.0.jpg";
                 path_to_normal_map = "NA";
-                glm::vec3 sun = orbit_center + glm::vec3(orbit_distance, 0.0f, 0.0f);
-                space->set_sun_location(sun);
+                //std::cout << "sun: <" << space->get_sun_location().x << ", " << space->get_sun_location().y << ", " << space->get_sun_location().z << ">" << std::endl;
+                if (space->get_sun_location().x == 0.0f && space->get_sun_location().y == 0.0f && space->get_sun_location().z == 0.0f) {
+                    glm::vec3 sun = orbit_center + glm::vec3(orbit_distance, 0.0f, 0.0f);
+                    space->set_sun_location(sun);
+                }
             } else {
                 int random_index = get_random_index();
                 path_to_texture = get_texture(random_index);

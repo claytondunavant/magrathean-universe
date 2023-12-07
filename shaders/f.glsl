@@ -33,12 +33,7 @@ void main()
 
     if (isLuminous == 1) {
         // Luminous sphere logic 
-        // Calculate the vector from the fragment to the luminous sphere
-        vec3 lightDir = normalize(luminousSpherePos - FragPos);
-
-        // Calculate Lambertian diffuse reflection
-        float diff = max(dot(normal, lightDir), 0.0);
-        brightness += diff;
+        brightness += 0.4;
 
     } else {
         if (useShadows == 1) {
