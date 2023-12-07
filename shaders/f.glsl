@@ -3,7 +3,7 @@
 in vec2 TexCoord;
 in vec3 FragPos;
 in mat3 TBN;
-
+in mat4 fView;
 out vec4 FragColor;
 
 uniform sampler2D colorTexture;
@@ -29,6 +29,7 @@ void main()
 
     // Set a constant brightness (adjust as needed)
     float brightness = 1.0;
+    float diff;
 
     if (isLuminous == 1) {
         // Luminous sphere logic 
@@ -41,9 +42,16 @@ void main()
 
     } else {
         // Shadow mapping logic
-        vec3 lightDir = normalize(luminousSpherePos - FragPos);
+        // Calculate the vector from the fragment to the luminous sphere
+        vec3 lightDir = normalize(vec3(fView * vec4(luminousSpherePos, 1.0)) - FragPos);
+        //lightDir = normalize(vec3(fView * vec4(luminousSpherePos, 0.0)));
+
+        // Calculate Lambertian diffuse reflection
         float diff = max(dot(normal, lightDir), 0.0);
-        brightness = 1.0 - diff;
+        brightness -= diff;
+
+
+
 
     }
 

@@ -7,6 +7,7 @@ layout (location = 3) in vec3 aTangent;
 out vec2 TexCoord;
 out vec3 FragPos;
 out mat3 TBN;
+out mat4 fView;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -22,6 +23,8 @@ void main()
     vec3 B = cross(N, T);
 
     TBN = transpose(mat3(T, B, N));
+
+    fView = view;
 
     gl_Position = projection * view * model * vec4(aPos, 1.0);
 }

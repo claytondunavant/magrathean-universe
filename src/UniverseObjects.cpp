@@ -302,7 +302,7 @@ void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick, glm::
 
     shader.use(); 
 
-    std::cout << "sun_location: " << sun_location.x << "," << sun_location.y << "," << sun_location.z << std::endl;
+    //std::cout << "sun_location: " << sun_location.x << "," << sun_location.y << "," << sun_location.z << std::endl;
     
     glm::mat4 model = rotate_around_orbit_center_matrix(tick);
 
