@@ -9,6 +9,9 @@
 
 #include "UniverseObjects.h"
 
+float sphere_movement_toggle = 1.0f;
+float sub_space_movement_toggle = 1.0f;
+
 UniverseObject::UniverseObject(float radius, float orbit_distance, glm::vec3 orbit_center){
     m_radius = radius;
     m_orbit_distance = orbit_distance;
@@ -24,7 +27,7 @@ UniverseObject::UniverseObject(float radius, float orbit_distance, glm::vec3 orb
 glm::mat4 UniverseObject::rotate_around_orbit_center_matrix(unsigned int tick) {
 
     glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-    float current_angle = (tick * TICK_ROTATION_FACTOR) + m_rotation_offset;
+    float current_angle = ((tick * TICK_ROTATION_FACTOR) + m_rotation_offset) * sphere_movement_toggle;
 
     // orbit center corrds matrix
     glm::mat4 center_matrix = glm::translate(glm::mat4(1.0f), m_orbit_center);
@@ -467,7 +470,7 @@ void Space::rotate_orbit_centers() {
             
             // rotate current angle around the up axis
             // why the heck is angle a constant angle here and not when rotating spheres
-            float angular_velocity = ORBIT_CENTER_ANGULAR_VELOCITY;
+            float angular_velocity = ORBIT_CENTER_ANGULAR_VELOCITY * sub_space_movement_toggle;
             glm::mat4 rotation_matrix = glm::rotate(glm::mat4(1.0f), angular_velocity, UP);
             
             // get the cached vector (maintains the length and angle)
