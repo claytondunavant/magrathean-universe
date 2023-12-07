@@ -260,7 +260,7 @@ GLuint Sphere::load_texture(const char* fileName, bool isBumpMap) {
 
     if (data)
     {
-        std::cout << "The image " << fileName << " loaded has size " << width << "x" << height << std::endl;
+        //std::cout << "The image " << fileName << " loaded has size " << width << "x" << height << std::endl;
         GLenum format;
 
         if (isBumpMap) {
@@ -289,7 +289,7 @@ GLuint Sphere::load_texture(const char* fileName, bool isBumpMap) {
     }
     else
     {
-        std::cerr << "Failed to load texture at path: " << fileName << std::endl;
+        //std::cerr << "Failed to load texture at path: " << fileName << std::endl;
         stbi_image_free(data);
         glDeleteTextures(1, &local_texture_id);
         local_texture_id = 0;
