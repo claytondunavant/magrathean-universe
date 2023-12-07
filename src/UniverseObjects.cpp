@@ -5,6 +5,8 @@
 
 #include "UniverseObjects.h"
 #include "glm/detail/qualifier.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 
 #include "UniverseObjects.h"
@@ -33,7 +35,7 @@ glm::mat4 UniverseObject::rotate_around_orbit_center_matrix(unsigned int tick) {
     glm::mat4 rotation_matrix = glm::rotate(glm::mat4(1.0f), current_angle, up);
     // translate out the z by orbit distance    
     glm::mat4 translation_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(m_orbit_distance, 0.0f, 0.0f));
-    
+
     return center_matrix * rotation_matrix * translation_matrix;
 }
 
@@ -296,15 +298,23 @@ GLuint Sphere::load_texture(const char* fileName, bool isBumpMap) {
 
 }
 
-void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
+void Sphere::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick, glm::vec3 sun_location) {
 
     shader.use(); 
+
+    std::cout << "sun_location: " << sun_location.x << "," << sun_location.y << "," << sun_location.z << std::endl;
     
     glm::mat4 model = rotate_around_orbit_center_matrix(tick);
 
     shader.setMat4("model", model);
     shader.setMat4("view", view);
     shader.setMat4("projection", projection);
+
+    
+    glUniform1i(glGetUniformLocation(shader.ID, "isLuminous"), m_is_illuminated);
+    glUniform1i(glGetUniformLocation(shader.ID, "orbitDistance"), m_orbit_distance);
+    glUniform3f(glGetUniformLocation(shader.ID, "luminousSpherePos"), sun_location.x, sun_location.y, sun_location.z);
+
 
     // Use the texture in your shader
     shader.setInt("colorTexture", 0); // Set the texture unit
@@ -346,6 +356,10 @@ void Sphere::set_orbit_center(glm::vec3 orbit_center) {
     m_orbit_center = orbit_center; 
 }
 
+void Sphere::set_sun_location(glm::vec3 sun) {
+    sun_location = sun;
+}
+
 // add a sphere to the space, update the radius and center point
 void Space::add_sphere(Sphere * sphere) {
     // add sphere to orbits
@@ -367,6 +381,14 @@ void Space::add_sphere(Sphere * sphere) {
     if ( m_orbit_center != UNIVERSE_ORIGIN ) {
         shift_orbit_center_right(added_radius);
     }
+}
+
+void Space::set_sun_location(glm::vec3 sun) {
+    sun_location = sun;
+}
+
+glm::vec3 Space::get_sun_location() {
+	return sun_location;
 }
 
 void Space::add_space(Space * space) {
@@ -508,7 +530,7 @@ void Space::draw(glm::mat4 view, glm::mat4 projection, unsigned int tick) {
         // cheating polymorphism, one enum at a time
         if ( obj->get_type() == sphere_type ) {
             Sphere * sphere = static_cast<Sphere *>(obj);
-            sphere->draw(view, projection, tick); 
+            sphere->draw(view, projection, tick, sun_location); 
 
         } else if ( obj->get_type() == space_type ) {
             Space * space = static_cast<Space *>(obj);

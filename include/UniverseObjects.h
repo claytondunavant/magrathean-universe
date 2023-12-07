@@ -91,13 +91,15 @@ public:
     
     universe_object_type get_type() override;
     void set_orbit_center(glm::vec3 orbit_center) override;
+    void set_sun_location(glm::vec3 sun);
 
-    void draw(glm::mat4 view, glm::mat4 projection, unsigned int tick);
+    void draw(glm::mat4 view, glm::mat4 projection, unsigned int tick, glm::vec3 sun_location);
 
 private:
     GLuint texture_id;
     GLuint normal_texture_id;
     bool m_is_illuminated;
+    glm::vec3 sun_location;
 };
 
 // Space consisting of orbiting spheres and sub-spaces
@@ -116,6 +118,8 @@ public:
    void rotate_orbit_centers();
    void add_sphere(Sphere * sphere);
    void add_space(Space * space);
+   void set_sun_location(glm::vec3 sun_location);
+   glm::vec3 get_sun_location();
 
    universe_object_type get_type() override;
    std::vector<UniverseObject *> get_orbits();
@@ -126,6 +130,7 @@ public:
     
 private:
     std::vector<UniverseObject *> m_orbits;
+    glm::vec3 sun_location;
 };
 
 

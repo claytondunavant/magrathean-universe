@@ -197,6 +197,8 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
             if (spheres_are_illuminated) {
                 path_to_texture = "../../../assets/textures/sunmap2.0.jpg";
                 path_to_normal_map = "NA";
+                glm::vec3 sun = orbit_center + glm::vec3(orbit_distance, 0.0f, 0.0f);
+                space->set_sun_location(sun);
             } else {
                 int random_index = get_random_index();
                 path_to_texture = get_texture(random_index);
@@ -204,6 +206,7 @@ string_to_space_state string_to_space(std::string string, int index = 0, int dep
             }
             
             Sphere * s = new Sphere(sphere_radius, orbit_distance, orbit_center, path_to_texture, path_to_normal_map, spheres_are_illuminated);
+            s->set_sun_location(space->get_sun_location());
             
             // this will update the space's radius
             space->add_sphere(s);
